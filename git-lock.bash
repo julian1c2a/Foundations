@@ -112,8 +112,10 @@ fi
 SORRY_COUNT=0
 for F in $STAGED_FILES; do
     if [[ "$F" == *.lean ]] && [ -f "$F" ]; then
-        N=$(grep -c '\bsorry\b' "$F" 2>/dev/null || echo 0)
-        if [ "$N" -gt 0 ]; then
+        N=$(grep -c 'sorry' "$F" 2>/dev/null || true)
+        N="${N//[^0-9]/}"   # strip any non-numeric chars (MSYS safety)
+        N="${N:-0}"
+        if [ "$N" -gt 0 ] 2>/dev/null; then
             echo "⚠️  WARNING: $N sorry in $F"
             SORRY_COUNT=$((SORRY_COUNT + N))
         fi

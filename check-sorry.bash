@@ -29,11 +29,13 @@ echo "=== sorry report ==="
 while IFS= read -r FILE; do
     [ -z "$FILE" ] && continue
     [ ! -f "$FILE" ] && continue
-    COUNT=$(grep -c '\bsorry\b' "$FILE" 2>/dev/null || echo 0)
-    if [ "$COUNT" -gt 0 ]; then
+    COUNT=$(grep -c 'sorry' "$FILE" 2>/dev/null || true)
+    COUNT="${COUNT//[^0-9]/}"
+    COUNT="${COUNT:-0}"
+    if [ "$COUNT" -gt 0 ] 2>/dev/null; then
         echo ""
         echo "📄 $FILE ($COUNT sorry)"
-        grep -n '\bsorry\b' "$FILE" | sed 's/^/   /'
+        grep -n 'sorry' "$FILE" | sed 's/^/   /'
         TOTAL=$((TOTAL + COUNT))
         FILES_WITH_SORRY=$((FILES_WITH_SORRY + 1))
     fi
