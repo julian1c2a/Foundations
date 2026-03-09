@@ -28,7 +28,7 @@ License: MIT
       by design; concrete proofs will live in separate modules.
 -/
 
-import MKplus.Prelim
+import MyProject.Prelim
 -- Available from Prelim (no re-import needed):
 --   ExistsUnique, ∃! x, p, ∃¹ x, p
 --   ExistsUnique.intro / .exists / .choose / .choose_spec / .unique
