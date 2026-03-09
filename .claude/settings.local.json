@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add MyProject/MKplusAxioms.lean)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(bash git-lock.bash lock MyProject/MKplusAxioms.lean)",
+      "Bash(bash git-lock.bash lock MyProject/Prelim.lean)",
+      "Bash(bash git-lock.bash list)",
+      "Bash(bash git-lock.bash lock MKplus/Prelim.lean)",
+      "Bash(chmod u+w locked_files.txt)",
+      "Bash(bash git-lock.bash unlock MyProject/MKplusAxioms.lean)",
+      "Bash(git add -A)",
+      "Bash(bash git-lock.bash lock MKplus/MKplusAxioms.lean)"
+    ]
+  }
+}

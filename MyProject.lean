@@ -8,6 +8,6 @@ License: MIT
 -- This file is managed by gen-root.bash — run it after adding new modules.
 -- Manual edits are safe but will be overwritten by gen-root.bash.
 
-import ProjectName.Prelim
+import MyProject.Prelim
 
 -- Add new module imports here (or run: bash gen-root.bash)
