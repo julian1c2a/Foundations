@@ -27,6 +27,8 @@ package «ProjectName» where
 
 @[default_target]
 lean_lib «ProjectName» where
+
+lean_lib «MKplus» where
   -- globs := #[.submodules `ProjectName]
   -- ↑ Uncomment to auto-discover all .lean files in ProjectName/
   --   (Lake will compile them without listing in the root file)
