@@ -16,8 +16,10 @@ License: MIT
     1. Proper classes are first-class objects (not just informal talk).
     2. Comprehension schema (A7) allows formulas quantifying over classes,
        not just over sets — making MK strictly stronger than ZFC.
-    3. Global Choice (MK⁺1) and the Class Axiom Scheme of Choice (MK⁺2)
-       go beyond NBG's set-form choice.
+    3. Global Choice is included as A9 in the base MK axioms,
+       following Kelley (1955). This is already stronger than AC in ZFC.
+    4. MK⁺ = MK (with Global Choice) + Class Axiom Scheme of Choice (CAC).
+       CAC is strictly stronger than Global Choice over MK.
 
   Lean encoding strategy:
     · A single Lean `Type` called `Class` for the universe of discourse.
@@ -172,35 +174,67 @@ open Classical
 --     ∃ z : Class, IsSet z ∧
 --       ∀ v : Class, v ∈ᴹ z ↔ ∃ u : Class, u ∈ᴹ x ∧ ⟪u, v⟫ ∈ᴹ F
 
-
-/-! ─────────────────────────────────────────────────────────────────────────
-    §3 · MK⁺ — Class Axiom Scheme of Choice
-    ─────────────────────────────────────────────────────────────────────────
-
-  Three progressively stronger choice principles for classes.
-  MK⁺1 is "global choice as a class"; MK⁺2 is the full axiom *scheme*.
-  They are independent from MK in the same sense AC is independent from ZF.
-
-  Reference: Felgner (1971) "Models of ZF-Set Theory", §IV;
-             Mostowski (1939) on class well-orderings.
--/
-
--- ── MK⁺1. Global Choice (class selector form) ────────────────────────────
--- There exists a class C that *selects* an element from every non-empty set.
--- Equivalently: there is a global choice function at the class level.
+-- ── A9. Global Choice ─────────────────────────────────────────────────────
+-- There exists a class C that selects an element from every non-empty set.
+-- This is Kelley's (1955) original ninth axiom, included here as part of
+-- the base MK system. It is stronger than AC (which only gives a set-function
+-- for set-indexed families) because C is a proper class that works uniformly
+-- over ALL sets simultaneously.
+--
+-- Three equivalent formulations (all provably equivalent over A1–A8):
+--
+--   (a) Class selector form:
+-- axiom MK_GlobalChoice :
+--   ∃ C : Class,
+--     ∀ x : Class, IsSet x → (∃ u : Class, u ∈ᴹ x) →
+--       ∃ u : Class, u ∈ᴹ x ∧ ⟪x, u⟫ ∈ᴹ C
+--
+--   (b) Class well-order form:
+-- axiom MK_WO :
+--   ∃ W : Class,
+--     (∀ x y : Class, IsSet x → IsSet y → x ≠ y →
+--       ⟪x, y⟫ ∈ᴹ W ∨ ⟪y, x⟫ ∈ᴹ W) ∧
+--     (∀ x y : Class, ⟪x, y⟫ ∈ᴹ W → ¬ ⟪y, x⟫ ∈ᴹ W) ∧
+--     (∀ X : Class, (∃ u : Class, IsSet u ∧ u ∈ᴹ X) →
+--       ∃ m : Class, IsSet m ∧ m ∈ᴹ X ∧
+--         ∀ u : Class, IsSet u → u ∈ᴹ X → ¬ ⟪u, m⟫ ∈ᴹ W)
+--
+--   (c) Zermelo form (every set can be well-ordered by some set-relation):
+--       follows from (b) by restriction.
+--
+-- We adopt formulation (a) as the official axiom; (b) and (c) will be
+-- derived theorems.
 -- axiom MK_GlobalChoice :
 --   ∃ C : Class,
 --     ∀ x : Class, IsSet x → (∃ u : Class, u ∈ᴹ x) →
 --       ∃ u : Class, u ∈ᴹ x ∧ ⟪x, u⟫ ∈ᴹ C
 
--- ── MK⁺2. Class Axiom Scheme of Choice (CAC) ─────────────────────────────
--- For any class-relation R that is "total" on sets (every set has an
--- R-image), there exists a class-function F ⊆ R with the same domain.
+
+/-! ─────────────────────────────────────────────────────────────────────────
+    §3 · MK⁺ — Class Axiom Scheme of Choice (CAC)
+    ─────────────────────────────────────────────────────────────────────────
+
+  MK (with A1–A9 above) already has Global Choice as a single axiom.
+  What MK⁺ adds is the *scheme* of class choice: for any *definable*
+  class-relation R that is total on sets, a class-function selector exists.
+
+  The difference:
+    · A9 (Global Choice) gives one fixed class C that chooses from all sets.
+    · CAC (MK⁺) gives, for each total class-relation R, a class-function
+      F ⊆ R. This is strictly stronger because R can depend on parameters
+      ranging over classes, yielding choices that A9 alone cannot provide.
+
+  Reference: Felgner (1971) "Models of ZF-Set Theory", §IV;
+             Lévy (1976) "The Role of Classes in Set Theory".
+-/
+
+-- ── MK⁺. Class Axiom Scheme of Choice (CAC) ──────────────────────────────
+-- For any class-relation R that is total on sets (every set has an R-image),
+-- there exists a class-function F ⊆ R with the same domain on sets.
 --
--- This is stated as an axiom *scheme*: one instance for each class R
--- (equivalently, one instance for each formula defining R).
--- In practice in Lean, a single `axiom` with a universally quantified
--- class R captures the whole scheme.
+-- In Lean a single `axiom` with universally quantified R captures the
+-- whole scheme (one Lean Prop = one formula, so ∀ R already ranges over
+-- all definable class-relations).
 --
 -- axiom MK_CAC :
 --   ∀ (R : Class),
@@ -209,20 +243,6 @@ open Classical
 --       (∀ x y z : Class, ⟪x, y⟫ ∈ᴹ F → ⟪x, z⟫ ∈ᴹ F → y = z) ∧  -- F is a function
 --       (∀ x : Class, IsSet x → ∃ y : Class, ⟪x, y⟫ ∈ᴹ F) ∧       -- F is total on sets
 --       (∀ x y : Class, ⟪x, y⟫ ∈ᴹ F → ⟪x, y⟫ ∈ᴹ R)               -- F ⊆ R
-
--- ── MK⁺3. Well-ordering of the universe (class well-order form) ──────────
--- There exists a class W that well-orders all sets.
--- (Equivalent to MK⁺1 over MK; included for completeness.)
--- axiom MK_WO :
---   ∃ W : Class,
---     -- W is a total strict order on sets:
---     (∀ x y : Class, IsSet x → IsSet y → x ≠ y →
---       ⟪x, y⟫ ∈ᴹ W ∨ ⟪y, x⟫ ∈ᴹ W) ∧
---     (∀ x y : Class, ⟪x, y⟫ ∈ᴹ W → ¬ ⟪y, x⟫ ∈ᴹ W) ∧
---     -- W is well-founded on sets:
---     (∀ X : Class, (∃ u : Class, IsSet u ∧ u ∈ᴹ X) →
---       ∃ m : Class, IsSet m ∧ m ∈ᴹ X ∧
---         ∀ u : Class, IsSet u → u ∈ᴹ X → ¬ ⟪u, m⟫ ∈ᴹ W)
 
 
 /-! ─────────────────────────────────────────────────────────────────────────
