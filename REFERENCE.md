@@ -14,7 +14,7 @@
 |--------|-----------|--------------|--------|
 | `Prelim.lean` | top-level | `Init.Classical` | ✅ Completo |
 
-*Status codes*: ✅ Completo · 🔶 Parcial · 🔄 En progreso · ❌ Pendiente
+*Status codes*: ✅ Complete · 🧊 Frozen · 🔶 Partial · 🔄 In progress · ❌ Pending
 
 ---
 
