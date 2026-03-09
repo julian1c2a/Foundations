@@ -16,6 +16,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+*.log
 
 # Lock file temp
 locked_files.txt.tmp

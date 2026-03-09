@@ -21,7 +21,7 @@ This document establishes requirements and standards for technical documentation
 
 #### (4.1.) **How to document definitions**: Include the Lean 4 signature plus mathematical notation (no explanations — the audience is mathematicians and Lean 4 experts). Include module, namespace, and dependencies.
 
-#### (4.2.) **Computability**: Indicate whether the definition is computable or noncomputable, and whether it has a boolean counterpart.
+#### (4.2.) **Computability**: Indicate whether the definition is computable or noncomputable, and whether it has a boolean counterpart, and if it is decidable or not.
 
 #### (4.3.) **Well-foundedness**: Indicate whether the definition includes a termination proof (*terminated by*).
 
@@ -29,7 +29,7 @@ This document establishes requirements and standards for technical documentation
 
 ### (5.) **Introduced axioms and their references**: Each axiom must document its location (module, namespace, declaration order) and relationship to definitions.
 
-### (6.) For axioms and definitions, provide:
+### (6.) For **axioms** and **definitions**, provide:
 
 #### (6.1.) **Mathematical notation** (not Lean code) for human readability. No explanations — mathematical language suffices.
 
@@ -49,7 +49,7 @@ This document establishes requirements and standards for technical documentation
 
 ### (9.) **Update REFERENCE.md each time you load a `.lean` file** and find something new. Record the date and the last modification date of the `.lean` file for traceability.
 
-### (10.) **REFERENCE.md must be self-sufficient** — enough to write new modules or documentation without loading the full project. This is the primary purpose of the file for AI assistants.
+### (10.) **REFERENCE.md must be self-sufficient** — enough to write new modules or documentation without loading the full project. This file **REFERENCE.md** is the primary purpose of the file for AI assistants.
 
 ### (11.) **When reading a `.lean` file, add or verify its REFERENCE.md header comment** reminding the reader to project the file.
 
