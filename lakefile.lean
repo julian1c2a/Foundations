@@ -3,7 +3,7 @@ open Lake DSL
 
 -- Replace «ProjectName» with your project name (must match directory name)
 -- and update the package name accordingly
-package «ProjectName» where
+package «MyProject» where
   -- Disable auto-implicit to enforce explicit type annotations everywhere
   moreServerArgs := #["-DautoImplicit=false"]
 
@@ -26,7 +26,7 @@ package «ProjectName» where
 -- ─────────────────────────────────────────────────────────────────────────────
 
 @[default_target]
-lean_lib «ProjectName» where
+lean_lib «MyProject» where
 
 lean_lib «MKplus» where
   -- globs := #[.submodules `ProjectName]
