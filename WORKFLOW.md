@@ -23,6 +23,7 @@ bash setup.bash MyProject "Your Full Name" your-github-username
 ```
 
 This single command:
+
 - Renames `ProjectName/` → `MyProject/` and `ProjectName.lean` → `MyProject.lean`
 - Replaces all occurrences of `ProjectName`, `Your Name`, `your-username` in every file
 - Updates copyright year to the current year
@@ -35,16 +36,19 @@ bash git-lock.bash init
 ```
 
 This installs the pre-commit hook that:
+
 - Blocks commits that touch locked `.lean` files
 - Warns about `sorry` statements in staged files
 
 > **Note**: Run this once per machine/clone. The hook lives in `.git/hooks/` which is not versioned.
 
 > **Do NOT run `git init` or `lake init`.**
+>
 > - `git init` is already done by `git clone` — running it again would reinitialize the repo and break the commit history.
 > - `lake init` would overwrite `lakefile.lean` with a bare default, losing the template configuration (`autoImplicit=false`, `globs`, commented dependencies).
 >
 > If you activate a dependency in `lakefile.lean`, run `lake update` (not `lake init`) to fetch it:
+>
 > ```bash
 > # After uncommenting a require block in lakefile.lean:
 > lake update   # downloads and registers the external package
@@ -72,6 +76,9 @@ Edit these files before starting development:
 | `README.md` | Project description, module table |
 | `lakefile.lean` | Add external dependencies; uncomment `globs` if desired |
 | `DECISIONS.md` | Add project-specific design decisions |
+| `NAMING-CONVENTIONS.md` | Customize domain-specific naming rules and examples |
+| `NEXT-STEPS.md` | Define initial development phases |
+| `THOUGHTS.md` | Record design philosophy and initial decisions |
 | `LICENSE` | Verify author name and year |
 
 ---
@@ -125,6 +132,7 @@ bash git-lock.bash lock MyProject/ModuleName.lean
 > **At most one `.lean` file may be unlocked at any time.**
 
 If you need to switch to a different file mid-session:
+
 ```bash
 bash git-lock.bash lock MyProject/CurrentModule.lean
 bash git-lock.bash unlock MyProject/NextModule.lean
@@ -159,7 +167,7 @@ make sorry
 
 # 3. Update REFERENCE.md
 #    Project modified .lean files → REFERENCE.md
-#    (See AIDER-AI-GUIDE.md §12)
+#    (See AI-GUIDE.md §12)
 ```
 
 ### Committing
@@ -219,12 +227,13 @@ This scans `MyProject/` for all `.lean` files (excluding `_template.lean`) and r
 
 When starting a session with an AI assistant:
 
-1. **Point to AIDER-AI-GUIDE.md** — the AI reads this first
+1. **Point to AI-GUIDE.md** — the AI reads this first
 2. **Point to REFERENCE.md** — the AI uses this instead of loading all `.lean` files
 3. **Remind the one-file rule** — unlock only the target module
 4. **At session end** — AI locks all modified files and updates `REFERENCE.md`, `CHANGELOG.md`
 
 Key commands to tell the AI:
+
 ```
 bash git-lock.bash list             # what is currently unlocked?
 bash git-lock.bash unlock File.lean # unlock for editing

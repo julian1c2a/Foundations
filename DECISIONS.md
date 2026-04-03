@@ -43,11 +43,63 @@ Each entry records *what* was decided and *why*, for future reference.
 
 **Rationale**: Lean 4 proofs are fragile — small changes to completed modules can break dependent proofs. The locking system makes this explicit.
 
-**Consequences**: Workflow requires locking/unlocking files. See AIDER-AI-GUIDE.md §20.
+**Consequences**: Workflow requires locking/unlocking files. See AI-GUIDE.md §20.
 
 ---
 
-## Template for new decisions:
+## ADR-004: Mathlib naming conventions
+
+**Date**: 2025-01-01
+**Status**: Accepted
+
+**Decision**: All identifiers follow Mathlib4 naming conventions as documented in NAMING-CONVENTIONS.md.
+
+**Rationale**: Consistency with the broader Lean 4 ecosystem. Makes theorems discoverable by name pattern (`mem_X_iff`, `subject_predicate`). Facilitates future Mathlib integration if desired.
+
+**Consequences**: Existing names may need migration. See NAMING-CONVENTIONS.md for the full dictionary and 12 formation rules. REFERENCE.md §0 provides a quick reference.
+
+---
+
+## ADR-005: Directory-aligned namespaces
+
+**Date**: 2025-01-01
+**Status**: Accepted
+
+**Decision**: Each subdirectory corresponds to a sub-namespace: `ProjectName/Foo/Bar.lean` → `namespace ProjectName.Foo.Bar`.
+
+**Rationale**: Clear 1:1 mapping between file system and namespace hierarchy. Reduces confusion about where definitions live. Scales well as the project grows.
+
+**Consequences**: `new-module.bash` must handle subdirectory creation. `gen-root.bash` must scan recursively.
+
+---
+
+## ADR-006: Annotation system in REFERENCE.md
+
+**Date**: 2025-01-01
+**Status**: Accepted
+
+**Decision**: REFERENCE.md entries include `@axiom_system` and `@importance` annotations.
+
+**Rationale**: Helps AI assistants prioritize which modules/theorems to load for context. Provides quick classification without reading module code.
+
+**Consequences**: Annotations must be maintained when modules are updated. See AI-GUIDE.md §24-25.
+
+---
+
+## ADR-007: Separate NAMING-CONVENTIONS.md file
+
+**Date**: 2025-01-01
+**Status**: Accepted
+
+**Decision**: Naming conventions live in a dedicated NAMING-CONVENTIONS.md file, with a summary in AI-GUIDE.md and REFERENCE.md §0.
+
+**Rationale**: The full naming dictionary with 12 rules and migration tables is too large for AI-GUIDE.md alone. A separate file allows detailed examples without bloating the main guide.
+
+**Consequences**: Three places reference naming: NAMING-CONVENTIONS.md (canonical), AI-GUIDE.md (summary), REFERENCE.md §0 (reader guide). All must be kept in sync.
+
+---
+
+## Template for new decisions
 
 ## ADR-NNN: [Title]
 

@@ -16,6 +16,30 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.2.0] - 2025-01-01
+
+### Added
+
+- `NAMING-CONVENTIONS.md`: Full Mathlib-style naming dictionary with 12 formation rules, symbol-to-word dictionary, and migration tables
+- `NEXT-STEPS.md`: Development phase planning template
+- `THOUGHTS.md`: Design journal template for recording ideas and alternatives
+- `REFERENCE.md` §0: Naming conventions quick-reference guide for the reader
+- `REFERENCE.md` §Compliance: Checklist against AI-GUIDE.md requirements
+- `AI-GUIDE.md` §22-23: Directory and subdirectory organization protocol
+- `AI-GUIDE.md` §24-25: Annotation system (`@axiom_system`, `@importance`)
+- `AI-GUIDE.md` §26-28: Cross-reference files documentation
+- `AI-GUIDE.md`: Symbol-to-word dictionary and theorem formation rules summary in Naming Conventions section
+- `DECISIONS.md`: ADR-004 (Mathlib naming), ADR-005 (directory-aligned namespaces), ADR-006 (annotation system), ADR-007 (separate NAMING-CONVENTIONS.md)
+- `_template.lean`: Added naming convention reminders, annotation metadata, expanded section structure
+- `CURRENT-STATUS-PROJECT.md`: Development phases tracking table
+
+### Changed
+
+- `README.md`: Added naming conventions summary table, documentation table format, subdirectory-aware project structure
+- `DEPENDENCIES.md`: Added subdirectory-aware structure, multi-level dependency hierarchy example, Mermaid subgraph example
+
+---
+
 ## [0.1.0] - 2025-01-01
 
 ### Added

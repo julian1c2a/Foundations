@@ -5,8 +5,12 @@ License: MIT
 -/
 
 -- REFERENCE.md: project this file after every modification.
--- See AIDER-AI-GUIDE.md §12 for the "proyectar" protocol.
+-- See AI-GUIDE.md §12 for the "proyectar" protocol.
+-- See NAMING-CONVENTIONS.md for naming rules.
+--
 -- Dependencies: ProjectName.Prelim (add more as needed)
+-- @axiom_system: none
+-- @importance: medium
 
 import ProjectName.Prelim
 -- import ProjectName.OtherModule
@@ -22,17 +26,27 @@ namespace ProjectName.ModuleName
 -- ============================================================
 -- Section 1: Definitions
 -- ============================================================
+-- Naming: UpperCamelCase for Prop predicates (IsXxx)
+--         lowerCamelCase for functions/constructors
 
 -- def myDef : Type := ...
 
 -- ============================================================
--- Section 2: Theorems
+-- Section 2: Basic Properties
 -- ============================================================
+-- Naming: subject_predicate pattern (snake_case)
+--         Suffixes: _iff, _eq, _of_, _mem, _subset, _ne
 
 -- theorem myTheorem : ... := by ...
 
 -- ============================================================
--- Section 3: Exports
+-- Section 3: Advanced Theorems
+-- ============================================================
+-- Naming: conclusion_of_hypothesis pattern
+--         Use .mp/.mpr for iff directions
+
+-- ============================================================
+-- Section 4: Exports
 -- ============================================================
 
 end ProjectName.ModuleName

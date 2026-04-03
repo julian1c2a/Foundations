@@ -5,7 +5,7 @@ License: MIT
 -/
 
 -- REFERENCE.md: project this file after every modification.
--- See AIDER-AI-GUIDE.md §12 for the "proyectar" protocol.
+-- See AI-GUIDE.md §12 for the "proyectar" protocol.
 -- This is the foundational module. All other modules import it.
 
 import Init.Classical
