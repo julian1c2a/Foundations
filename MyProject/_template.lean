@@ -46,8 +46,11 @@ namespace ProjectName.ModuleName
 --         Use .mp/.mpr for iff directions
 
 -- ============================================================
--- Section 4: Exports
+-- Section 4: Exports (AI-GUIDE.md §30–31)
 -- ============================================================
+-- List ALL public (non-private) declarations alphabetically.
+-- This block goes AFTER end namespace, at top level.
+-- Notation/syntax propagates automatically — do not list here.
 
 end ProjectName.ModuleName
 

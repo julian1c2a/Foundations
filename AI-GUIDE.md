@@ -434,8 +434,8 @@ section FoundationConsequences
 ## Compliance
 
 Verify that REFERENCE.md, `.lean` files, and documentation files comply with all points
-(0–21) and naming conventions (NC-1–NC-10) before considering documentation complete
-and up to date.
+(0–21), export/glob rules (23, 30–33), and naming conventions (NC-1–NC-10) before
+considering documentation complete and up to date.
 
 ---
 
@@ -474,18 +474,106 @@ Rules:
 - `gen-root.bash` automatically scans subdirectories.
 - Namespace mirrors path: `ProjectName/Nat/Add.lean` → `namespace ProjectName.Nat.Add`.
 
-### (23.) Barrel modules (optional)
+### (23.) Barrel modules (mandatory for subdirectories)
 
-For a subdirectory `Foo/` with many modules, you may create `Foo.lean` at the same level
-that re-exports all submodules:
+Every subdirectory containing 2 or more `.lean` modules **MUST** have a barrel file.
+The barrel file:
+
+- Sits at the same level as the directory, named `DirName.lean` (e.g., `Operations.lean` for `Operations/`).
+- Imports ALL production sub-modules in the directory (excludes `test_*.lean` and `Test*.lean`).
+- Contains NO definitions, theorems, or proofs — only `import` statements and an optional header comment.
+- Serves as the **single import point** for the subdirectory.
 
 ```lean
--- ProjectName/Foo.lean
-import ProjectName.Foo.Basic
-import ProjectName.Foo.Advanced
+-- ProjectName/Operations.lean (barrel file)
+import ProjectName.Operations.Union
+import ProjectName.Operations.Intersection
+import ProjectName.Operations.Setminus
+-- ... all production modules in Operations/
 ```
 
-This is optional — the root module `ProjectName.lean` always imports everything.
+The root barrel file (`ProjectName.lean`) **prefers barrel imports** over individual
+sub-modules when a barrel exists:
+
+```lean
+-- ProjectName.lean (root barrel)
+import ProjectName.CList          -- barrel for CList/
+import ProjectName.Operations     -- barrel for Operations/
+import ProjectName.Axioms         -- barrel for Axioms/
+import ProjectName.HFSets         -- top-level module (no barrel needed)
+import ProjectName.Notation       -- top-level module
+```
+
+`gen-root.bash` detects barrel files and emits the barrel import instead of listing
+each sub-module individually.
+
+---
+
+## Export/Glob Architecture
+
+### (30.) Export blocks in leaf modules
+
+Every production module (not barrels, not test files) **MUST** end with an `export` block
+that lists all public (non-private) definitions, theorems, lemmas, and instances from the
+module's namespace. This makes declarations available to importers without requiring
+`open Namespace`.
+
+**Pattern:**
+
+```lean
+namespace MyNamespace
+
+def myDef : Type := ...
+
+theorem myTheorem : ... := ...
+
+end MyNamespace
+
+-- Export: all public declarations from this module
+export MyNamespace (myDef myTheorem)
+```
+
+**Rules:**
+
+1. The `export` statement goes AFTER `end namespace`, at the top level of the file.
+2. List ALL non-private `def`, `theorem`, `lemma`, `instance` names.
+3. Do NOT export `private` declarations, `_aux` helpers, or intermediate lemmas prefixed with `private`.
+4. Keep the export list **sorted alphabetically** within each namespace.
+5. If a module contributes to multiple namespaces, use one `export` per namespace.
+6. `notation`, `macro`, `syntax` are NOT listed in `export` — they propagate automatically on `import`.
+
+**Effect:** After `import ProjectName.Axioms.Union`, downstream code can write
+`mem_union` directly instead of `MyNamespace.mem_union`.
+
+### (31.) Export block maintenance
+
+- **Adding** a new public declaration requires adding it to the `export` block.
+- **Renaming** a declaration requires updating the `export` block.
+- **Deleting** a public declaration requires removing it from the `export` block.
+- When **projecting** a module to REFERENCE.md (§14), verify the export list matches.
+- The export list is the **canonical list** of a module's public API.
+
+### (32.) Barrel files and exports
+
+Barrel files (`DirName.lean`) do **not** add their own `export` blocks — the leaf modules
+handle their own exports. The barrel file's sole job is aggregation via `import`.
+
+However, a barrel file **may** include a top-level comment cataloguing the public API:
+
+```lean
+-- ProjectName/Operations.lean
+-- Public API: union, inter, setminus, pair, powerset, symDiff, orderedPair,
+--             sep, sUnion, dom, range, comp, image, ...
+import ProjectName.Operations.Union
+import ProjectName.Operations.Intersection
+-- ...
+```
+
+### (33.) Template compliance
+
+The `_template.lean` file must reflect the export pattern. Section 4 ("Exports") in the
+template shows the `export` block after `end namespace`. New modules created by
+`new-module.bash` inherit this structure.
 
 ---
 
