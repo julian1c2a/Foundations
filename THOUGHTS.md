@@ -1,6 +1,6 @@
 # Thoughts — Foundations
 
-**Last updated:** 2026-04-09 12:00
+**Last updated:** 2026-04-10 00:00
 **Author**: Julián Calderón Almendros
 
 > This is an informal design journal. Record ideas, alternatives considered,
@@ -198,6 +198,205 @@ El forcing añade una nueva dimensión al problema de la repetición: una vez qu
 
 ---
 
+## 2026-04-10 — Taxonomía de paradigmas: axioma, teorema y axioma revelado
+
+### La observación central
+
+Los sistemas de fundamentación del proyecto no son homogéneos en su relación con los
+axiomas. Existen al menos **tres paradigmas** distintos, que conviven en el mismo proyecto:
+
+---
+
+#### Paradigma 1 — Axiomático puro (ZFC, NBG, MK, TG)
+
+Los axiomas se declaran con `axiom` en Lean 4. Son proposiciones *asumidas* sin prueba.
+El tipo universo `U` y la relación de membresía `∈` son términos opacos.
+
+```lean
+-- En ZFCSetTheory:
+axiom ZF_Ext    : ∀ (x y : U), (∀ z, z ∈ x ↔ z ∈ y) → x = y
+axiom ZF_Found  : ∀ (x : U), x ≠ ∅ → ∃ y ∈ x, ∀ z ∈ x, z ∉ y
+```
+
+El principio de inducción (conjuntista: inducción sobre el rango ε) **no es primitivo**:
+se deriva del Axioma de Fundación + transfinita recursión sobre el orden ∈-bien-fundado.
+No hay ninguna estructura inductiva de la que Lean pueda extraer inducción "gratis".
+
+---
+
+#### Paradigma 2 — Tipo inductivo (AczelSetTheory, Peano)
+
+El universo de objetos se define como un **tipo inductivo** en Lean 4.
+La inducción estructural es automática, provista por el núcleo del sistema de tipos.
+
+```lean
+-- En AczelSetTheory:
+inductive CList : Type where
+  | nil  : CList
+  | cons : CList → CList → CList
+
+-- HFSet es el tipo cociente bajo igualdad extensional
+def HFSet := Quotient CListSetoid
+```
+
+Aquí las cosas se invierten respecto al Paradigma 1:
+
+- La **inducción** es un teorema *gratuito* por definición del tipo.
+- Los axiomas de ZFC (extensionalidad, fundación, par, unión, separación...) son
+  **teoremas** que hay que demostrar. Se "revelan" probando que el tipo satisface
+  cada propiedad axiomática.
+- La **consistencia** está garantizada por la normalización del sistema de tipos de Lean.
+
+```lean
+-- En AczelSetTheory: extensionalidad es un TEOREMA
+theorem AZ_Ext : ∀ (x y : HFSet), (∀ z, z ∈ x ↔ z ∈ y) → x = y :=
+  Quotient.sound ∘ ...   -- demostrado por la definición del cociente
+```
+
+---
+
+#### Paradigma 3 — Modelo revelado (Von Neumann ω en ZFC, instancias cruzadas)
+
+Un tipo (o conjunto) definido dentro de un sistema más grande se puede *verificar*
+como modelo de un sistema más pequeño o diferente.
+
+**Ejemplo 1**: Los naturales de Von Neumann en ZFC.
+Se define `ω = ⋃ { n | n es ordinal de Von Neumann finito }` dentro de ZFC.
+Luego se prueba que `ω` con la estructura `(0 := ∅, σ := succ, +, ×)` satisface
+los axiomas de Peano — incluido el principio de inducción. Aquí `PA_Ind` es un
+**teorema de ZFC**, no un axioma.
+
+**Ejemplo 2**: HFSet como modelo de ZFC (sin infinitud).
+AczelSetTheory prueba que `HFSet ⊨ ZFC \ {ZF_Inf}` — los axiomas de ZFC finito
+son todos teoremas en el sistema de Aczel.
+
+**Ejemplo 3**: Instancias de typeclass.
+Cuando se define `instance AczelIsSetAxioms : SetAxioms HFSet`, se está
+literalmente *construyendo un modelo* de `SetAxioms` dentro del sistema de tipos
+de Lean. La instancia IS el modelo.
+
+---
+
+### La dualidad axioma/teorema entre sistemas
+
+Lo que es axioma en un sistema puede ser teorema en otro, y viceversa:
+
+| Propiedad | ZFC | AczelSetTheory | Peano | ZFC sobre ω |
+|-----------|-----|----------------|-------|-------------|
+| Extensionalidad | `axiom ZF_Ext` | `theorem AZ_Ext` | N/A | N/A |
+| Fundación / bien-fundación | `axiom ZF_Found` | `theorem` (por inducción CList) | N/A | `theorem` (ω es bien-fundado) |
+| Inducción | `theorem` (de ZF_Found) | `theorem gratuito` (tipo inductivo) | `axiom PA_Ind` | `theorem` (ω satisface PA_Ind) |
+| Par | `axiom ZF_Pair` | `theorem` (cons) | N/A | N/A |
+| Infinitud | `axiom ZF_Inf` | `theorem ¬` (HFSet son los conjuntos hereditariamente finitos) | implícita en PA | `theorem` (ω existe) |
+| Elección | `axiom ZF_Choice` | ¿teorema? (decidible para HFSets) | N/A | open question |
+
+Esta tabla ilustra que la misma propiedad matemática tiene *status lógico diferente*
+según el sistema en que se trabaja.
+
+---
+
+### Implicación arquitectónica: typeclass = teoría de modelos en Lean 4
+
+La observación anterior tiene una consecuencia arquitectónica fundamental:
+
+> **El mecanismo de typeclass instances de Lean 4 es exactamente la teoría de modelos
+> formalizada en el sistema de tipos.**
+
+Cuando se declara:
+```lean
+class SetAxioms (U : Type u) extends SetOps U where
+  ext    : ∀ x y : U, (∀ z, z ∈ x ↔ z ∈ y) → x = y
+  found  : ∀ x : U, x ≠ empty → ∃ y ∈ x, ∀ z ∈ x, z ∉ y
+  -- ...
+```
+
+...y luego se define:
+```lean
+instance : SetAxioms HFSet   where ext := AZ_Ext;  found := AZ_Found_thm; ...
+instance : SetAxioms ZFCSet  where ext := ZF_Ext;  found := ZF_Found; ...
+```
+
+Los campos de la instancia son exactamente los *hechos que satisfacen los axiomas*
+en cada modelo. La diferencia es solo en el *status* de esos hechos:
+- `ZF_Ext` es un `axiom` (asumido)
+- `AZ_Ext` es un `theorem` (demostrado constructivamente)
+
+Pero para el *usuario* de la typeclass, esta diferencia es invisible: en ambos casos
+se puede escribir `SetAxioms.ext` y funciona. La distinción importa a nivel de
+**solidez** (soundness) y **fuerza demostrativa**, no a nivel de uso.
+
+---
+
+### La necesidad de anotar el status lógico de cada declaración
+
+Esta diversidad exige un sistema de anotaciones más preciso que el actual
+(`@axiom_system`, `@importance`). Se propone añadir **`@proof_status`**:
+
+| Valor | Significado | Ejemplo |
+|-------|-------------|---------|
+| `axiom` | Asumido sin prueba (`axiom` en Lean) | `ZF_Ext` en ZFCSetTheory |
+| `theorem` | Demostrado desde axiomas o definiciones | `AZ_Ext` en AczelSetTheory |
+| `theorem_constructive` | Demostrado sin `Classical.*` | `AZ_Found` vía inducción CList |
+| `theorem_classical` | Demostrado usando `Classical.choice` o LEM | muchos teoremas de ZFC |
+| `decidable` | Computable: `Decidable` instance disponible | igualdad en HFSet |
+| `definitional` | Verdadero por `rfl` (igualdad definitoria) | normalmente de cocientes bien definidos |
+
+Esta anotación debe aparecer en REFERENCE.md para cada declaración importante.
+Permite a un lector saber de un vistazo cuánta fuerza lógica se está usando.
+
+---
+
+### El proceso de "revelación" como verificación de modelo
+
+En el Paradigma 3, el proceso de trabajar con un tipo y probar qué axiomas satisface
+es exactamente el proceso de **construir y verificar un modelo** en teoría de modelos.
+
+Cuando AczelSetTheory prueba `HFSet ⊨ ZFC_fin`, está haciendo lo mismo que cuando
+un lógico construye un modelo de primer orden y verifica que satisface cada axioma.
+La diferencia es que en Lean 4 la verificación es *mecánicamente certificada*.
+
+Esto sugiere que el módulo `Foundations.Models` no debe ser solo una biblioteca de
+conjuntos jerárquicos abstractos. Debe incluir:
+
+1. **Modelos como instancias**: cada `instance : SetAxioms X` es un modelo de `SetAxioms`.
+2. **Verificación de axiomas**: lemas del tipo `X_satisfies_ZFC_fin` que acumulan
+   todas las instancias de `SetAxioms` para el tipo `X`.
+3. **Mapas entre modelos**: functores entre instancias (embeddings, isomorfismos de modelos).
+4. **Consistencia relativa**: si `instance MKIsZFCAxioms : ZFCAxioms MKUniverse` existe,
+   eso es una prueba constructiva de que MK es al menos tan consistente como ZFC.
+
+---
+
+### Consecuencia para la Phase 1 (interfaz typeclass)
+
+La Phase 1 debe diseñarse teniendo en cuenta los tres paradigmas:
+
+1. Los campos de `SetAxioms` deben ser `Prop`s — no asumen cómo se prueban.
+2. Pero `SetAxioms` debería tener una versión *decidable* o *computacional* opcional:
+   `class DecidableSetAxioms (U : Type u) extends SetAxioms U` donde además
+   `∈` es decidible. Esto captura el Paradigma 2 (AczelSetTheory) sin forzarlo al 1.
+3. Considerar si algunos campos del typeclass deben exigir `Constructive` (sin Classical)
+   para poder distinguir instancias constructivas de clásicas.
+
+---
+
+### Ejemplo concreto de la diversidad en acción
+
+```
+¿Es "∀ x, x ∉ x" un axioma, teorema, o se revela?
+
+- En ZFC:   TEOREMA (de ZF_Found: x ∈ x implicaría x = {x}, contradiciendo ZF_Found)
+- En Aczel: TEOREMA CONSTRUCTIVO (CList no tiene ciclos por su definición inductiva)
+- En Peano: NO APLICA (ℕ no tiene membresía)
+- En MK:    TEOREMA (MK extiende ZFC, hereda el resultado)
+- En NF:    ¡PROBLEMA! NF no tiene Fundación y permite estratificación distinta
+```
+
+Este ejemplo muestra que la misma propiedad puede tener naturaleza radicalmente
+diferente según el sistema, y que el sistema de interfaces debe poder expresar esto.
+
+---
+
 ## Open Questions
 
 ### Arquitectura general
@@ -209,6 +408,13 @@ El forcing añade una nueva dimensión al problema de la repetición: una vez qu
 ### Sistemas numéricos
 - [ ] ¿Hasta dónde llega Peano para números algebraicos y aproximaciones de Cauchy sin Mathlib?
 - [ ] ¿Qué axiomas de infinito son agregables a AczelSetTheory sin romper su decidibilidad/constructivismo?
+
+### Taxonomía de paradigmas y status lógico
+- [ ] ¿Debe `SetAxioms` tener una subclase `DecidableSetAxioms` para capturar AczelSetTheory sin mezclar paradigmas?
+- [ ] ¿Cómo anotar en REFERENCE.md el `@proof_status` de forma estandarizada? ¿Añadir a AI-GUIDE.md §24–25?
+- [ ] ¿Puede Lean 4 verificar automáticamente que una instancia es "constructiva" (no usa `Classical`)? ¿O hay que hacerlo por convención?
+- [ ] NF no tiene Fundación: ¿cómo maneja `SetAxioms` sistemas donde algunos campos son vacíos o distintos? ¿Subtypeclasses sin `found`?
+- [ ] ¿La consistencia relativa vía instancias (`MKIsZFCAxioms`) es matemáticamente rigurosa dentro de Lean, o hay que ser más cuidadoso?
 
 ### Meta-lógica y Gödel
 - [ ] ¿Cuál es la representación más conveniente de la sintaxis de FOL en Lean 4 (tipo inductivo vs. encodings de De Bruijn)?
