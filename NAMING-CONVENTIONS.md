@@ -5,7 +5,7 @@
 > [Mathlib Naming Conventions](https://leanprover-community.github.io/contribute/naming.html),
 > adapted to the project's specific domain.
 
-**Last updated:** 2026-04-09 00:00
+**Last updated:** 2026-04-09 12:00
 **Author**: Julián Calderón Almendros
 
 ---
@@ -262,3 +262,242 @@ Priority order for migration:
 4. Derived structures: Boolean algebras, cardinality, etc.
 
 Each rename is verified with full compilation before proceeding.
+
+---
+
+## 6. Multi-System Architecture — Naming Conventions
+
+This section governs how the existing source repositories (Peano, AczelSetTheory,
+ZFCSetTheory, MKplusCAC) and future systems are named and namespaced within
+`Foundations`. Read this section **before** migrating code from any source repo.
+
+---
+
+### 6.1 Namespace Hierarchy
+
+Every system maps to a sub-namespace of `Foundations`. The mapping is:
+
+```
+Foundations                          -- root (Prelim.lean lives here)
+Foundations.FOL                      -- Layer 0: first-order logic
+Foundations.FOL.Syntax               -- terms, formulas, substitution
+Foundations.FOL.Proof                -- deductive system
+Foundations.FOL.Semantics            -- structures, satisfaction
+Foundations.FOL.Completeness         -- Henkin construction, main theorem
+Foundations.Arithmetic               -- Layer 0: Gödel numbering
+Foundations.Arithmetic.Coding        -- encoding syntax as ℕ
+Foundations.Arithmetic.Incompleteness
+Foundations.Numeric                  -- Level 1: numeric systems
+Foundations.Numeric.Nat              -- Peano naturals
+Foundations.Numeric.Int              -- integers
+Foundations.Numeric.Rat              -- rationals
+Foundations.Numeric.CauchySeq       -- Cauchy approximations
+Foundations.Sets                     -- Level 2: set theories
+Foundations.Sets.Interface           -- abstract typeclass + universal theorems
+Foundations.Sets.Aczel               -- AczelSetTheory
+Foundations.Sets.ZFC                 -- ZFCSetTheory
+Foundations.Sets.MK                  -- MKplusCAC
+Foundations.Sets.TG                  -- Tarski-Grothendieck (future)
+Foundations.Sets.NBG                 -- von Neumann-Bernays-Gödel (future)
+Foundations.Sets.KP                  -- Kripke-Platek (future)
+Foundations.Sets.NF                  -- New Foundations (future)
+Foundations.Models                   -- model theory and hierarchies
+Foundations.Models.VonNeumann        -- cumulative hierarchy V_α
+Foundations.Models.Constructible     -- constructible universe L
+Foundations.Models.Grothendieck      -- Grothendieck universes
+Foundations.Models.LargeCardinals    -- large cardinal hierarchy
+Foundations.Forcing                  -- Cohen forcing framework
+Foundations.Forcing.Library          -- canonical forcing conditions
+Foundations.Categories               -- category theory (future)
+Foundations.HoTT                     -- homotopy type theory (future)
+```
+
+**Rule NC-11**: Every module declares exactly the namespace that corresponds to its
+path. `Foundations/Sets/ZFC/Extensionality.lean` → `namespace Foundations.Sets.ZFC.Extensionality`.
+
+---
+
+### 6.2 Axiom Tag Table
+
+Each foundational system uses a fixed uppercase tag for its axioms.
+The tag immediately precedes the descriptor with no extra underscore: `TAG_Descriptor`.
+
+| System | Tag | Canonical axiom examples |
+|--------|-----|--------------------------|
+| FOL (logical axioms) | `FOL_` | `FOL_MP`, `FOL_Gen`, `FOL_Spec`, `FOL_Eq` |
+| Peano Arithmetic | `PA_` | `PA_Zero`, `PA_Succ`, `PA_Add`, `PA_Mul`, `PA_Ind` |
+| Aczel Set Theory | `AZ_` | `AZ_Ext`, `AZ_Found`, `AZ_Pair`, `AZ_Union`, `AZ_Sep`, `AZ_Inf` |
+| ZFC | `ZF_` | `ZF_Ext`, `ZF_Empty`, `ZF_Pair`, `ZF_Sep`, `ZF_Union`, `ZF_Pow`, `ZF_Inf`, `ZF_Found`, `ZF_Repl`, `ZF_Choice` |
+| Morse-Kelley + CAC | `MK_` | `MK_Ext`, `MK_Sep`, `MK_Union`, `MK_Pow`, `MK_Inf`, `MK_Found`, `MK_Repl`, `MK_Choice`, `MK_CAC` |
+| Tarski-Grothendieck | `TG_` | `TG_Ext`, `TG_Pair`, `TG_Univ`, `TG_Choice` |
+| NBG | `NBG_` | `NBG_Ext`, `NBG_Sep`, `NBG_Class` |
+| Kripke-Platek | `KP_` | `KP_Ext`, `KP_Found`, `KP_Pair`, `KP_Sep`, `KP_Coll` |
+| New Foundations | `NF_` | `NF_Ext`, `NF_CompStrat` (stratified comprehension) |
+
+**Rule NC-12**: Axioms that were named differently in the source repo **must be renamed**
+to follow the `TAG_Descriptor` pattern before migration. The migration checklist (§6.5)
+includes this step explicitly.
+
+---
+
+### 6.3 Typeclass Naming
+
+Typeclasses that abstract over a foundational system follow `UpperCamelCase` + descriptive suffix:
+
+| Typeclass | Meaning |
+|-----------|---------|
+| `SetOps U` | Provides basic set operations on a universe type `U` |
+| `SetAxioms U [SetOps U]` | The axioms hold for `U` |
+| `ZFCAxioms U [SetAxioms U]` | Full ZFC (including Replacement and Choice) holds |
+| `MKAxioms U [ZFCAxioms U]` | MK extension: classes + CAC |
+| `TGAxioms U [ZFCAxioms U]` | TG extension: Grothendieck universes |
+| `NumericSystem α` | An ordered numeric system |
+| `ForcingPoset P` | A partial order `P` suitable as forcing conditions |
+
+Instances follow the pattern `instance SystemNameIsTypeclassName`:
+
+```lean
+instance ZFCIsSetAxioms : SetAxioms ZFCUniverse := { ... }
+instance MKIsZFCAxioms  : ZFCAxioms MKUniverse  := { ... }
+```
+
+**Rule NC-13**: Never use `abbrev` for typeclass aliases across systems — use `instance`
+with the full chain, so Lean can synthesize through the hierarchy automatically.
+
+---
+
+### 6.4 Cross-System Theorem Naming
+
+When a theorem holds in multiple systems, there are three patterns depending on context:
+
+**Pattern A — Typeclass-universal theorem** (Capa 2):
+Proved once for any `[SetAxioms U]`. Lives in `Foundations.Sets.Interface`.
+Name: plain `subject_predicate`, no system prefix.
+
+```lean
+-- In Foundations/Sets/Interface/Empty.lean
+theorem empty_unique [SetAxioms U] : ... := ...
+```
+
+**Pattern B — System-specific proof** (Capa 3):
+A proof that uses properties specific to one system (e.g., ZFC's Replacement).
+Name: same `subject_predicate` pattern, qualified by namespace.
+
+```lean
+-- In Foundations/Sets/ZFC/Cardinals.lean
+namespace Foundations.Sets.ZFC
+theorem card_equiv_class_of_repl : ...  -- uses ZF_Repl specifically
+end Foundations.Sets.ZFC
+```
+
+**Pattern C — Lifting theorem**:
+A theorem that says "since MK extends ZFC, theorem X from ZFC holds in MK".
+Name: `X` is automatically available in MK context via the typeclass instance chain.
+No separate theorem needed — Lean's typeclass synthesis handles this.
+
+**Rule NC-14**: If a theorem holds universally (Pattern A), **do not** copy its proof into
+the system-specific module. Instead, define the typeclass instance and rely on A.
+Duplication is the primary problem this architecture solves.
+
+---
+
+### 6.5 Pre-Migration Checklist (per source repository)
+
+Before bringing a source repo into `Foundations`, complete all items for that repo.
+This checklist should be run on the **source repo** before any migration commit.
+
+#### Checklist — `Peano`
+
+- [ ] All axioms renamed to `PA_*` pattern
+- [ ] All `namespace` declarations updated to map to `Foundations.Numeric.*`
+- [ ] All exported theorems follow `subject_predicate` snake_case
+- [ ] All functions follow `lowerCamelCase` (NC-4)
+- [ ] All Prop definitions follow `UpperCamelCase` (NC-3)
+- [ ] `autoImplicit=false` set in lakefile or per-file
+- [ ] Export blocks present in every module
+- [ ] Copyright header on every `.lean` file: `Author: Julián Calderón Almendros`
+- [ ] REFERENCE.md in Peano repo is up to date
+- [ ] Full compilation passes with zero sorry
+
+#### Checklist — `AczelSetTheory`
+
+- [ ] All axioms renamed to `AZ_*` pattern
+- [ ] Namespace → `Foundations.Sets.Aczel.*`
+- [ ] Export blocks
+- [ ] `autoImplicit=false`
+- [ ] Copyright headers
+- [ ] Decide: which HFSet names map to which `Foundations.Sets.Interface` names?
+  (e.g., Aczel's `HFSet.mem` → `mem` in `SetOps`)
+- [ ] Typeclass instance `AczelIsSetAxioms : SetAxioms AczelUniverse` drafted
+- [ ] Full compilation passes
+
+#### Checklist — `ZFCSetTheory`
+
+- [ ] `ZF_Repl` proven (Replacement) — **blocker**
+- [ ] `ZF_Choice` proven (Axiom of Choice) — **blocker**
+- [ ] All axioms renamed to `ZF_*` pattern
+- [ ] Namespace → `Foundations.Sets.ZFC.*`
+- [ ] Export blocks
+- [ ] `autoImplicit=false`
+- [ ] Copyright headers
+- [ ] Typeclass instance `ZFCIsZFCAxioms : ZFCAxioms ZFCUniverse` drafted
+- [ ] Cross-reference with `SetOps` interface: verify all operations are present
+- [ ] Full compilation passes
+
+#### Checklist — `MKplusCAC`
+
+- [ ] Expand beyond axioms: prove first consequences
+- [ ] All axioms renamed to `MK_*` pattern
+- [ ] Namespace → `Foundations.Sets.MK.*`
+- [ ] Export blocks
+- [ ] `autoImplicit=false`
+- [ ] Copyright headers
+- [ ] Typeclass instance `MKIsZFCAxioms : ZFCAxioms MKUniverse` drafted
+  (MK extends ZFC — this instance allows importing all ZFC theorems)
+- [ ] Full compilation passes
+
+---
+
+### 6.6 Import Strategy: Dependency vs. Direct Migration
+
+Two options for bringing source repos into `Foundations`:
+
+**Option A — Dependency (recommended for now)**:
+Add `require` in `lakefile.lean`. The source repo remains independent.
+Pros: no code duplication; source repos remain usable standalone.
+Cons: namespace adaptation requires wrappers; `lakefile.lean` dependencies must be kept in sync.
+
+```lean
+-- lakefile.lean
+require ZfcSetTheory from git
+  "https://github.com/julian1c2a/ZfcSetTheory" @ "master"
+```
+
+**Option B — Direct migration**:
+Copy `.lean` files into `Foundations/Sets/ZFC/`, rename namespaces, add export blocks.
+Pros: full control; single repo; no external dependency versioning.
+Cons: source repos and Foundations diverge; must keep both in sync manually.
+
+**Decision rule**: Use Option A until the source repo has passed its pre-migration checklist
+and the Foundations interface layer (Phase 1) is stable. Then evaluate Option B for
+systems that are considered stable/frozen.
+
+---
+
+### 6.7 FOL Symbol Extensions
+
+The symbol-to-word dictionary (§2) extended for meta-logical and forcing notation:
+
+| Symbol | In names | Context |
+|--------|----------|---------|
+| `⊢` | `provable` / `proves` | `T_proves_phi`, `consistent_of_not_provable` |
+| `⊨` | `models` / `satisfies` | `T_models_phi`, `satisfies_iff` |
+| `⌈·⌉` | `code` / `gn` | `gn_formula`, `code_of_term` (Gödel number) |
+| `Con(T)` | `consistent` | `consistent_PA`, `consistent_of_not_provable_false` |
+| `⊩` | `forces` | `forces_iff`, `p_forces_phi` |
+| `M[G]` | `generic_ext` | `generic_ext_models_ZFC` |
+| `V_α` | `vrank` | `vrank_succ`, `mem_vrank_iff` |
+| `L` | `constructible` | `constructible_mem_iff`, `gch_in_L` |
+| `κ` (cardinal) | `card` | `card_le`, `card_inaccessible` |
+| `λ` (limit ord.) | `limit` | `limit_ord`, `omega_is_limit` |
+| `ω` (first inf. ord) | `omega` | `omega_is_limit`, `nat_lt_omega` |
