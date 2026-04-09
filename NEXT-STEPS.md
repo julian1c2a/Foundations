@@ -1,6 +1,6 @@
 # Next Steps — Foundations
 
-**Last updated:** 2026-04-09 12:00
+**Last updated:** 2026-04-10 12:00
 **Author**: Julián Calderón Almendros
 
 > Este archivo registra las fases de desarrollo planificadas.
@@ -44,33 +44,125 @@ Phase 0 ──► Phase 1 ──► Phase 5 ──► Phase 6 ──► Phase 9
 
 ---
 
-## Phase 1: Diseño de interfaces (typeclasses)
+## Phase 1: Diseño de interfaces (typeclasses atómicos + bundles)
 
-**Objetivo**: Definir las interfaces abstractas que permiten que los teoremas universales
-(Capa 2) sean independientes del sistema de fundamentación concreto (Capa 1).
+**Objetivo**: Construir la jerarquía de typeclasses que permite reutilizar teoremas
+entre sistemas. Arquitectura: typeclasses **atómicos** (uno por axioma) +
+**bundles** (fragmentos nombrados) + teoremas con requisitos mínimos.
 
-**Módulos**:
+Ver THOUGHTS.md §"2026-04-10 — Inventario universal" para el análisis completo.
 
-- [ ] `Foundations/Sets/Interface/SetOps.lean`
-  — typeclass `SetOps` con las operaciones básicas: `mem`, `empty`, `pair`, `union`, `sep`, `powerset`, `succ`
-- [ ] `Foundations/Sets/Interface/SetAxioms.lean`
-  — typeclass `SetAxioms [SetOps U]` que encapsula los axiomas fundamentales
-- [ ] `Foundations/Sets/Interface/UniversalTheorems.lean`
-  — teoremas válidos para cualquier `[SetAxioms U]` (sin asumir sistema concreto)
-- [ ] `Foundations/Numeric/Interface/NumericSystem.lean`
-  — typeclass `NumericSystem` para sistemas numéricos ordenados
+### Phase 1a — Typeclasses atómicos del inventario S (conjuntos)
 
-**Barrel files**:
-- [ ] `Foundations/Sets/Interface.lean`
+Cada archivo define UN typeclass y su notación/API inmediata. Sin probar teoremas aquí.
+
+- [ ] `Foundations/Sets/Atomic/Ext.lean`     — `class HasExt (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Empty.lean`   — `class HasEmpty (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Pair.lean`    — `class HasPair (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Sep.lean`     — `class HasSep (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Union.lean`   — `class HasUnion (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Pow.lean`     — `class HasPow (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Inf.lean`     — `class HasInf (U) [Membership U U, HasEmpty U, HasSucc U]`
+- [ ] `Foundations/Sets/Atomic/Found.lean`   — `class HasFound (U) [Membership U U, HasEmpty U]`
+- [ ] `Foundations/Sets/Atomic/Repl.lean`    — `class HasRepl (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/Choice.lean`  — `class HasChoice (U) [Membership U U]`
+- [ ] `Foundations/Sets/Atomic/StratSep.lean`— `class HasStratSep (U) [Membership U U]` (para NF)
+- [ ] `Foundations/Sets/Atomic/ClassSep.lean`— `class HasClassSep (U) [Membership U U]` (para MK/NBG)
+- [ ] `Foundations/Sets/Atomic/CAC.lean`     — `class HasCAC (U) [Membership U U]` (para MK)
+
+**Barrel**: `Foundations/Sets/Atomic.lean`
+
+### Phase 1b — Typeclasses atómicos del inventario A (aritmética)
+
+- [ ] `Foundations/Numeric/Atomic/Zero.lean`   — `class HasZero (N)`
+- [ ] `Foundations/Numeric/Atomic/Succ.lean`   — `class HasSucc (N) [HasZero N]`; inyectividad, σ n ≠ 0
+- [ ] `Foundations/Numeric/Atomic/Add.lean`    — `class HasAdd (N) [HasZero N, HasSucc N]`
+- [ ] `Foundations/Numeric/Atomic/Mul.lean`    — `class HasMul (N) [HasZero N, HasSucc N, HasAdd N]`
+- [ ] `Foundations/Numeric/Atomic/Ind.lean`    — `class HasInd (N) [HasZero N, HasSucc N]`
+
+**Barrel**: `Foundations/Numeric/Atomic.lean`
+
+### Phase 1c — Bundles = fragmentos axiomáticos nombrados
+
+Cada bundle extiende atómicos sin añadir nuevos campos. Nombrados según la literatura.
+
+**Set-theoretic bundles:**
+
+- [ ] `Foundations/Sets/Bundles/ZFBasic.lean`
+  — `class ZFBasic (U) extends HasExt U, HasEmpty U, HasPair U, HasSep U`
+  — primer fragmento de ZFC: del vacío a la separación (orden del proyecto ZFCSetTheory)
+
+- [ ] `Foundations/Sets/Bundles/ZFFinite.lean`
+  — `class ZFFinite (U) extends ZFBasic U, HasUnion U, HasPow U, HasFound U`
+  — ZFC hereditariamente finito (modelo: HFSet de Aczel)
+
+- [ ] `Foundations/Sets/Bundles/Zermelo.lean`
+  — `class ZermeloSet (U) extends ZFFinite U, HasInf U`
+  — Z clásico (sin Replacement)
+
+- [ ] `Foundations/Sets/Bundles/ZF.lean`
+  — `class ZFSet (U) extends ZermeloSet U, HasRepl U`
+
+- [ ] `Foundations/Sets/Bundles/ZFC.lean`
+  — `class ZFCSet (U) extends ZFSet U, HasChoice U`
+
+- [ ] `Foundations/Sets/Bundles/MK.lean`
+  — `class MKSet (U) extends ZFCSet U, HasClassSep U, HasCAC U`
+
+- [ ] `Foundations/Sets/Bundles/NF.lean`
+  — `class NFSet (U) extends HasExt U, HasStratSep U`
+  — NF: extensionalidad + comprensión estratificada, SIN fundación
+
+- [ ] `Foundations/Sets/Bundles/KP.lean`
+  — `class KPSet (U) extends HasExt U, HasEmpty U, HasPair U, HasUnion U`
+  — Kripke-Platek (versión simplificada; la real añade restricciones de complejidad)
+
+**Barrel**: `Foundations/Sets/Bundles.lean`
+
+**Arithmetic bundles:**
+
+- [ ] `Foundations/Numeric/Bundles/Robinson.lean`
+  — `class RobinsonArith (N) extends HasZero N, HasSucc N, HasAdd N, HasMul N`
+  — aritmética Q de Robinson (sin inducción; base para incompletitud)
+
+- [ ] `Foundations/Numeric/Bundles/Peano.lean`
+  — `class PeanoArith (N) extends RobinsonArith N, HasInd N`
+
+**Barrel**: `Foundations/Numeric/Bundles.lean`
+
+### Phase 1d — Primeros teoremas universales (con requisitos mínimos)
+
+Cada teorema lleva exactamente los typeclasses atómicos que necesita:
+
+- [ ] `Foundations/Sets/Universal/Basic.lean`
+  — `inter`, `sdiff` como definiciones derivadas de `HasSep`
+  — `empty_unique [HasExt, HasEmpty]`, `pair_comm [HasExt, HasPair]`
+  — `sep_empty [HasEmpty, HasSep]`, `mem_inter_iff [HasSep]`
+
+- [ ] `Foundations/Sets/Universal/Subset.lean`
+  — `def subset [HasSep]`; `subset_refl`, `subset_trans`, `subset_antisymm [HasExt]`
+
+- [ ] `Foundations/Sets/Universal/Cantor.lean`
+  — `cantor_no_surjection [HasExt, HasPow, HasSep]`
+
+**Barrel**: `Foundations/Sets/Universal.lean`
+
+### Phase 1e — Instancias vacías para verificar la jerarquía
+
+Antes de migrar código real, se comprueba que la jerarquía es correcta creando
+instancias `sorry`-based temporales para `HFSet` y para un tipo abstracto `ZFCUniverse`:
+
+- [ ] `Foundations/Sets/Interface/CheckAczel.lean` — `instance : ZFFinite HFSet` (sorry)
+- [ ] `Foundations/Sets/Interface/CheckZFC.lean`   — `instance : ZFCSet ZFCUniverse` (sorry)
+
+Estas se borran cuando Phase 6 provea las instancias reales.
+
+**Barrel files principales**:
+- [ ] `Foundations/Sets/Interface.lean` (re-exporta Atomic + Bundles + Universal)
 - [ ] `Foundations/Numeric/Interface.lean`
 
-**Notas de diseño**:
-- La instancia `instance : ZFCAxioms → SetAxioms` se define en la fase de migración ZFC.
-- La instancia `instance : MKAxioms → ZFCAxioms` (MK es una extensión conservativa en muchos aspectos) se define en la fase MK.
-- Ver NAMING-CONVENTIONS.md §6.3 para la convención de nombres en typeclasses.
-
-**Dependencias**: Phase 0 completa
-**Complejidad**: Complex (decisión de diseño de alto impacto)
+**Dependencias**: Phase 0 completa; `Foundations.Prelim`
+**Complejidad**: Complex (decisión de diseño de alto impacto, pero modular)
 
 ---
 
@@ -390,60 +482,68 @@ Las instancias de ZFC, Aczel y MK los heredan automáticamente sin re-demostraci
 ```
 Foundations/
 ├── Prelim.lean                      ✅ Completo
-├── FOL/                             Phase 2+3
-│   ├── Syntax/
-│   │   ├── Terms.lean
-│   │   ├── Formulas.lean
-│   │   ├── Substitution.lean
-│   │   └── Decidable.lean
-│   ├── Proof/
-│   │   ├── Hilbert.lean
-│   │   └── Properties.lean
-│   ├── Semantics/
-│   │   ├── Structure.lean
-│   │   ├── Satisfaction.lean
-│   │   └── Consequence.lean
-│   └── Completeness/
-│       ├── Henkin.lean
-│       └── Theorem.lean
-├── Arithmetic/                      Phase 4
-│   ├── Coding/
-│   │   ├── GodelNumbering.lean
-│   │   └── PrimRec.lean
-│   ├── Representability.lean
-│   └── Incompleteness/
-│       ├── DiagonalLemma.lean
-│       ├── First.lean
-│       └── Second.lean
-├── Numeric/                         Phase 5
-│   ├── Interface/
-│   │   └── NumericSystem.lean
-│   ├── Nat/
-│   ├── Int/
-│   ├── Rat/
-│   └── CauchySeq.lean
-├── Sets/                            Phase 1+6+9
-│   ├── Interface/
-│   │   ├── SetOps.lean
-│   │   ├── SetAxioms.lean
-│   │   └── UniversalTheorems/
-│   ├── Aczel/
-│   ├── ZFC/
-│   ├── MK/
+│
+├── Sets/                            Phases 1+6+9
+│   ├── Atomic/                      Phase 1a — un typeclass por axioma S
+│   │   ├── Ext.lean, Empty.lean, Pair.lean, Sep.lean
+│   │   ├── Union.lean, Pow.lean, Inf.lean, Found.lean
+│   │   ├── Repl.lean, Choice.lean
+│   │   └── StratSep.lean, ClassSep.lean, CAC.lean
+│   ├── Bundles/                     Phase 1c — fragmentos nombrados
+│   │   ├── ZFBasic.lean, ZFFinite.lean, Zermelo.lean
+│   │   ├── ZF.lean, ZFC.lean, MK.lean
+│   │   ├── NF.lean, KP.lean
+│   │   └── (TG.lean, NBG.lean — Phase 10+11)
+│   ├── Universal/                   Phase 1d — teoremas con requisitos mínimos
+│   │   ├── Basic.lean, Subset.lean, Cantor.lean
+│   │   └── (más en Phase 9)
+│   ├── Aczel/                       Phase 6
+│   ├── ZFC/                         Phase 6
+│   ├── MK/                          Phase 6
 │   ├── TG/                          Phase 10
 │   ├── NBG/                         Phase 11
 │   ├── KP/                          Phase 11
 │   └── NF/                          Phase 11
+│
+├── Numeric/                         Phase 5
+│   ├── Atomic/                      Phase 1b — un typeclass por axioma A
+│   │   ├── Zero.lean, Succ.lean, Add.lean, Mul.lean, Ind.lean
+│   ├── Bundles/                     Phase 1c
+│   │   ├── Robinson.lean, Peano.lean
+│   ├── Nat/                         Phase 5 (de Peano repo)
+│   ├── Int/
+│   ├── Rat/
+│   └── CauchySeq.lean
+│
+├── FOL/                             Phase 2+3
+│   ├── Syntax/
+│   │   ├── Terms.lean, Formulas.lean, Substitution.lean, Decidable.lean
+│   ├── Proof/
+│   │   ├── Hilbert.lean, Properties.lean
+│   ├── Semantics/
+│   │   ├── Structure.lean, Satisfaction.lean, Consequence.lean
+│   └── Completeness/
+│       ├── Henkin.lean, Theorem.lean
+│
+├── Arithmetic/                      Phase 4
+│   ├── Coding/
+│   │   ├── GodelNumbering.lean, PrimRec.lean
+│   ├── Representability.lean
+│   └── Incompleteness/
+│       ├── DiagonalLemma.lean, First.lean, Second.lean
+│
 ├── Models/                          Phase 8
 │   ├── VonNeumann/
 │   ├── Constructible/
 │   ├── Grothendieck/
 │   └── LargeCardinals/
+│
 ├── Forcing/                         Phase 7
 │   ├── Basic/
 │   ├── GenericExtension/
 │   ├── Independence/
 │   └── Library/
+│
 ├── Categories/                      Phase 12
 └── HoTT/                            Phase 13
 ```

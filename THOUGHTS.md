@@ -1,6 +1,6 @@
 # Thoughts — Foundations
 
-**Last updated:** 2026-04-10 00:00
+**Last updated:** 2026-04-10 12:00
 **Author**: Julián Calderón Almendros
 
 > This is an informal design journal. Record ideas, alternatives considered,
@@ -394,6 +394,236 @@ La Phase 1 debe diseñarse teniendo en cuenta los tres paradigmas:
 
 Este ejemplo muestra que la misma propiedad puede tener naturaleza radicalmente
 diferente según el sistema, y que el sistema de interfaces debe poder expresar esto.
+
+---
+
+## 2026-04-10 — Inventario universal de axiomas y rediseño de Phase 1
+
+### La observación
+
+El orden de introducción de los axiomas es **sistema-específico**. ZFC empieza por el
+vacío, la extensionalidad, los pares y la separación, y mucho después llega la unión y
+el infinito. Peano empieza por el sucesor, sus propiedades, y la inducción. Aczel no
+tiene "axiomas primeros" — los obtiene todos a la vez por definición del tipo inductivo.
+
+Si hay ~16–20 axiomas fundamentales repartidos entre todos los sistemas, cada sistema
+es un **recorrido con un orden propio por un subconjunto** de ese inventario.
+
+Esto tiene tres implicaciones de diseño que invalidan la Phase 1 original (un único
+typeclass monolítico `SetAxioms`).
+
+---
+
+### Inventario universal de axiomas
+
+Se propone asignar un identificador canónico a cada axioma atómico.
+El código de familia es: `S` = set-theoretic, `A` = arithmetic, `C` = class/large cardinal.
+
+#### Familia S — Teoría de conjuntos
+
+| ID | Nombre | Descripción |
+|----|--------|-------------|
+| S01 | Membership | `∈ : U → U → Prop` (primitivo, no es axioma sino operación) |
+| S02 | Extensionality | `∀ x y, (∀ z, z ∈ x ↔ z ∈ y) → x = y` |
+| S03 | Empty | `∃ ∅, ∀ x, x ∉ ∅` |
+| S04 | Pair | `∀ x y, ∃ p, ∀ z, z ∈ p ↔ z = x ∨ z = y` |
+| S05 | Separation | `∀ φ x, ∃ y, ∀ z, z ∈ y ↔ z ∈ x ∧ φ z` |
+| S06 | Union | `∀ x, ∃ u, ∀ z, z ∈ u ↔ ∃ w ∈ x, z ∈ w` |
+| S07 | Powerset | `∀ x, ∃ p, ∀ z, z ∈ p ↔ z ⊆ x` |
+| S08 | Infinity | `∃ ω, ∅ ∈ ω ∧ ∀ y ∈ ω, succ y ∈ ω` |
+| S09 | Foundation | `∀ x ≠ ∅, ∃ y ∈ x, ∀ z ∈ x, z ∉ y` |
+| S10 | Replacement | `∀ F funcional, ∀ x, ∃ y, ∀ z, z ∈ y ↔ ∃ w ∈ x, F w z` |
+| S11 | Choice | `∀ x (disj. no vacío), ∃ selector` |
+| S12 | Stratified Sep. | Comprehensión estratificada de NF: `∀ φ estratificada, ∃ y, ∀ z, z ∈ y ↔ φ z` |
+
+#### Familia A — Aritmética (Peano)
+
+| ID | Nombre | Descripción |
+|----|--------|-------------|
+| A01 | Zero | `0 : ℕ` |
+| A02 | Succ | `σ : ℕ → ℕ`, inyectiva, `σ n ≠ 0` |
+| A03 | Add | `+ : ℕ → ℕ → ℕ` recursiva en el segundo argumento |
+| A04 | Mul | `× : ℕ → ℕ → ℕ` recursiva |
+| A05 | Induction | `∀ P, P 0 → (∀ n, P n → P (σ n)) → ∀ n, P n` |
+
+#### Familia C — Clases y cardinales grandes
+
+| ID | Nombre | Descripción |
+|----|--------|-------------|
+| C01 | ClassSep | Separación para clases propias (MK/NBG) |
+| C02 | CAC | Axioma de Elección para Clases (MK) |
+| C03 | GrothendieckUniv | Universos de Grothendieck (TG) |
+| C04 | Vopenka | Principio de Vopěnka (TG+Vopěnka) |
+
+---
+
+### Tabla de pertenencia y orden por sistema
+
+Para cada axioma, `—` = no aplica, número = posición en el desarrollo,
+`T` = teorema (no axioma), `T*` = teorema constructivo, `T!` = teorema clásico.
+
+| ID | ZFC | Peano | Aczel/HFSet | MK | NF/NFUM |
+|----|-----|-------|-------------|-----|---------|
+| S02 Extensionality | 1 | — | T* (cociente) | 1 | 1 |
+| S03 Empty | 2 | T (ω: ∅) | T* (nil) | 2 | T |
+| S04 Pair | 3 | — | T* (cons) | 3 | T |
+| S05 Separation | 4 | — | T* (filter) | 4 | — |
+| S06 Union | 5 | — | T* | 5 | T |
+| S07 Powerset | 6 | — | T* | 6 | T |
+| S08 Infinity | 7 | T (ω existe) | — (HFSets son finitos) | 7 | T |
+| S09 Foundation | 8 | T (inducción en ω) | T* (inducción CList) | 8 | — |
+| S10 Replacement | 9 | — | — | 9 | T |
+| S11 Choice | 10 | — | T? | 10 | T? |
+| S12 Strat. Sep. | — | — | — | — | 1 |
+| A01 Zero | T (∅ en ω) | 1 | T* (nil) | T | — |
+| A02 Succ | T (Von Neumann σ) | 2 | T* (cons 1 elem) | T | — |
+| A03 Add | T (recursión en ZFC) | 3 | T* | T | — |
+| A04 Mul | T | 4 | T* | T | — |
+| A05 Induction | T (de S09) | 5 | T* (gratis) | T | — |
+| C01 ClassSep | — | — | — | 11 | — |
+| C02 CAC | — | — | — | 12 | — |
+| C03 GrothendieckUniv | — | — | — | — | — |
+
+Esta tabla es el **mapa de compatibilidad** entre sistemas. Está pensada para evolucionar
+con el proyecto.
+
+---
+
+### Implicación de diseño 1 — Typeclasses atómicos, no monolíticos
+
+En lugar de un único `SetAxioms`, cada axioma del inventario tiene su propio
+typeclass **atómico y ortogonal**:
+
+```lean
+class HasExt (U : Type u) [Membership U U] where
+  ext : ∀ x y : U, (∀ z, z ∈ x ↔ z ∈ y) → x = y
+
+class HasEmpty (U : Type u) [Membership U U] where
+  empty : U
+  not_mem_empty : ∀ x : U, ¬ x ∈ empty
+
+class HasPair (U : Type u) [Membership U U] where
+  pair : U → U → U
+  mem_pair_iff : ∀ x a b : U, x ∈ pair a b ↔ x = a ∨ x = b
+
+class HasSep (U : Type u) [Membership U U] where
+  sep : (U → Prop) → U → U
+  mem_sep_iff : ∀ (φ : U → Prop) x z, z ∈ sep φ x ↔ z ∈ x ∧ φ z
+
+-- ... y así para cada axioma del inventario
+```
+
+Los **teoremas se prueban con los mínimos axiomas necesarios**:
+
+```lean
+-- Solo necesita S02 + S04
+theorem pair_comm [HasExt U, HasPair U] (a b : U) : pair a b = pair b a := ...
+
+-- Solo necesita S03 + S05
+theorem sep_empty [HasEmpty U, HasSep U] (φ : U → Prop) : sep φ empty = empty := ...
+
+-- Necesita S02 + S03 + S04 + S05 — ya se puede hablar de intersección
+def inter [HasSep U] (a b : U) : U := sep (· ∈ b) a
+```
+
+Esto garantiza **reutilización máxima**: cada teorema aplica a *cualquier sistema*
+que tenga los axiomas requeridos, sea ZFC, MK, o incluso Aczel (donde esos axiomas
+son teoremas, pero la instancia del typeclass los provee igualmente).
+
+---
+
+### Implicación de diseño 2 — Bundles = fragmentos axiomáticos nombrados
+
+Sobre los atómicos se construyen **bundles** que corresponden a fragmentos bien
+conocidos en teoría de la demostración. Cada bundle es un typeclass que extiende
+varios atómicos y no añade nuevos campos:
+
+```lean
+-- Zermelo básico: Ext + Empty + Pair + Sep
+class ZFBasic (U : Type u) extends HasExt U, HasEmpty U, HasPair U, HasSep U
+
+-- Zermelo sin infinito: + Union + Powerset + Foundation
+class ZFFinite (U : Type u) extends ZFBasic U, HasUnion U, HasPowerset U, HasFoundation U
+
+-- Zermelo (Z): + Infinity
+class ZermeloSet (U : Type u) extends ZFFinite U, HasInfinity U
+
+-- ZF sin Choice
+class ZFSet (U : Type u) extends ZermeloSet U, HasReplacement U
+
+-- ZFC completo
+class ZFCSet (U : Type u) extends ZFSet U, HasChoice U
+
+-- NF: extensionalidad + separación estratificada (SIN fundación)
+class NFSet (U : Type u) extends HasExt U, HasStratifiedSep U
+
+-- Peano básico
+class PeanoBasic (U : Type u) extends HasZero U, HasSucc U
+class PeanoFull (U : Type u) extends PeanoBasic U, HasAdd U, HasMul U, HasInd U
+```
+
+Los bundles nombrados también permiten usar nombres matemáticos canónicos bien conocidos
+(Zermelo, KP, MAC, IZF, CZF, etc.) cuando corresponda.
+
+---
+
+### Implicación de diseño 3 — El "orden" es el grafo de dependencias de los teoremas
+
+El orden de introducción de axiomas en cada sistema **no necesita codificarse en los
+typeclasses**: es natural en los módulos del proyecto. El módulo
+`Foundations/Sets/ZFC/Basic.lean` importa solo `HasExt`, `HasEmpty`, `HasPair`, `HasSep`
+y prueba los primeros teoremas. El módulo `Foundations/Sets/ZFC/Union.lean` añade
+`HasUnion` y prueba los siguientes.
+
+El grafo de dependencias entre módulos Lean **es exactamente el grafo de dependencias
+axiomáticas** del sistema. No hace falta codificarlo por separado.
+
+---
+
+### Fragmentos axiomáticos reconocidos en la literatura
+
+Esta lista ayuda a nombrar los bundles según estándares matemáticos:
+
+| Nombre | Axiomas | Significado |
+|--------|---------|-------------|
+| **Z** (Zermelo) | S02–S08 (sin S09, S10) | Zermelo sin Foundation ni Replacement |
+| **ZF** | S02–S10 | Zermelo-Fraenkel |
+| **ZFC** | S02–S11 | ZF + Choice |
+| **KP** (Kripke-Platek) | S02–S04, S05 (Σ₀), S06, S09 (Σ₀) | muy débil, base de admisibilidad |
+| **MAC** (Mac Lane) | Z sin S10 | equivalente a ETCS |
+| **IZF** | ZF sin LEM | ZF intuicionista |
+| **CZF** (Aczel) | IZF sin S07, + Presentación | ZF constructivo |
+| **PA** | A01–A05 | Aritmética de Peano |
+| **Q** (Robinson) | A01–A04 (sin A05) | aritmética débil, base para incompletitud |
+| **PRA** | A01–A04 + recursión primitiva | aritmética primitiva recursiva |
+
+Lean 4 / Mathlib tiene su propia jerarquía de algebras. La nuestra es paralela pero
+específica para sistemas de fundamentación sin Mathlib.
+
+---
+
+### Consecuencias para el diseño de Foundations.Models
+
+Si cada `instance : ZFCSet HFSet` es un modelo, entonces `Foundations.Models` no es
+solo una biblioteca de jerarquías — es la biblioteca de **instancias verificadas**:
+
+```lean
+-- En Foundations/Models/Aczel.lean
+-- "HFSet es un modelo de ZFBasic" — el proceso de revelar los axiomas
+instance : ZFBasic HFSet where
+  ext             := AczelSetTheory.AZ_Ext
+  empty           := AczelSetTheory.emptyHFS
+  not_mem_empty   := AczelSetTheory.not_mem_empty
+  pair            := AczelSetTheory.pairHFS
+  mem_pair_iff    := AczelSetTheory.mem_pair_iff
+  sep             := AczelSetTheory.sepHFS
+  mem_sep_iff     := AczelSetTheory.mem_sep_iff
+-- Corolario inmediato: todos los teoremas de ZFBasic valen en HFSet
+```
+
+El módulo `Foundations/Models/` es el lugar donde se recogen las instancias de los
+tipos concretos para los bundles. Es donde Paradigma 2 (inductive) se convierte en
+Paradigma 1 (axiomático) vía la interfaz typeclass.
 
 ---
 
