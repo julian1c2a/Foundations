@@ -1,7 +1,7 @@
 # AI Assistant Guide — Documentation Standards
 
-**Last updated:** 2025-01-01 00:00
-**Author**: Your Name
+**Last updated:** 2026-04-09 00:00
+**Author**: Julián Calderón Almendros
 
 This document establishes requirements and standards for technical documentation of this Lean 4 project.
 
@@ -89,7 +89,7 @@ Purpose: Track how outdated a file is relative to REFERENCE.md, even within a si
 ```lean
 /-
 Copyright (c) 2025. All rights reserved.
-Author: Your Name
+Author: Julián Calderón Almendros
 License: MIT
 -/
 ```
@@ -119,8 +119,8 @@ Tracking files:
 At most one `.lean` file unlocked at any time.
 
 ```bash
-bash git-lock.bash lock   ProjectName/Module.lean   # temporary lock
-bash git-lock.bash unlock ProjectName/Module.lean   # temporary unlock
+bash git-lock.bash lock   Foundations/Module.lean   # temporary lock
+bash git-lock.bash unlock Foundations/Module.lean   # temporary unlock
 bash git-lock.bash list                             # show all locked and frozen files
 bash git-lock.bash init                             # install/reinstall pre-commit hook
 ```
@@ -140,7 +140,7 @@ When a module reaches ✅ Complete status in REFERENCE.md, it must be **frozen**
 A frozen module is permanently immutable: it cannot be unlocked, only extended.
 
 ```bash
-bash git-lock.bash freeze ProjectName/Module.lean   # mark as permanently frozen
+bash git-lock.bash freeze Foundations/Module.lean   # mark as permanently frozen
 bash git-lock.bash list                              # shows [frozen] vs [locked]
 ```
 
@@ -151,7 +151,7 @@ frozen files, distinguishing them from ordinary locked files.
 **Emergency only** — thawing a frozen module:
 
 ```bash
-bash git-lock.bash thaw ProjectName/Module.lean --confirm
+bash git-lock.bash thaw Foundations/Module.lean --confirm
 ```
 
 The `--confirm` flag is required. After thawing, update REFERENCE.md status
@@ -168,17 +168,17 @@ When a frozen module `Foo.lean` needs new content:
    ```lean
    /-
    Copyright (c) YYYY. All rights reserved.
-   Author: Your Name
+   Author: Julián Calderón Almendros
    License: MIT
    -/
-   import ProjectName.Foo
+   import Foundations.Foo
 
-   namespace ProjectName   -- same namespace as Foo.lean
+   namespace Foundations   -- same namespace as Foo.lean
    -- new definitions and theorems here
-   end ProjectName
+   end Foundations
    ```
 
-3. Add `FooExt.lean` to `ProjectName.lean` (root import) and to REFERENCE.md.
+3. Add `FooExt.lean` to `Foundations.lean` (root import) and to REFERENCE.md.
 
 4. `Foo.lean` remains frozen and untouched.
 
@@ -288,7 +288,7 @@ The scheme follows Mathlib4 conventions.
 | ------- | ------- |
 | `UpperCamelCase.lean` | `Prelim.lean`, `CoreAxioms.lean`, `Ordinals.lean` |
 
-- Root entry point: `ProjectName.lean` — imports only, no definitions.
+- Root entry point: `Foundations.lean` — imports only, no definitions.
 - Template: `_template.lean` — underscore prefix marks non-imported utility files.
 - Extension of frozen module: `FooExt.lean` — imports `Foo.lean`, reopens its namespace.
 - Content-named extensions preferred: `OrdinalsArithmetic.lean` over `OrdinalsExt1.lean`.
@@ -301,8 +301,8 @@ The scheme follows Mathlib4 conventions.
 
 | Level | Pattern | Example |
 | ----- | ------- | ------- |
-| Root | `ProjectName` | `namespace ProjectName` |
-| Sub | `ProjectName.Topic` | `namespace ProjectName.Ordinals` |
+| Root | `Foundations` | `namespace Foundations` |
+| Sub | `Foundations.Topic` | `namespace Foundations.Ordinals` |
 
 - One namespace per module as a rule.
 - Do not create sub-namespaces solely for grouping within a file — use `section` instead.
@@ -420,7 +420,7 @@ section FoundationConsequences
 | Entity | Convention | Example |
 | ------ | ---------- | ------- |
 | Module (`.lean` file) | `UpperCamelCase` | `CoreAxioms.lean` |
-| Namespace | `UpperCamelCase` | `ProjectName`, `ProjectName.Ordinals` |
+| Namespace | `UpperCamelCase` | `Foundations`, `Foundations.Ordinals` |
 | Type / Prop predicate | `UpperCamelCase` | `IsSet`, `IsFun` |
 | Function / value def | `lowerCamelCase` | `oPair`, `dom` |
 | Axiom | `TAG_ShortName` | `MK_Ext`, `ZF_Sep` |
@@ -443,36 +443,36 @@ considering documentation complete and up to date.
 
 ### (22.) Module organization by subdirectory
 
-As the project grows, organize modules into **thematic subdirectories** inside `ProjectName/`.
+As the project grows, organize modules into **thematic subdirectories** inside `Foundations/`.
 Each subdirectory groups related modules and corresponds to a sub-namespace.
 
 Example structure:
 
 ```
-ProjectName/
+Foundations/
 ├── Prelim.lean               # Level 0: foundations
 ├── _template.lean            # Template (not imported)
 ├── Core/
-│   └── Basic.lean            # ProjectName.Core.Basic
+│   └── Basic.lean            # Foundations.Core.Basic
 ├── Axiom/
-│   ├── Extension.lean        # ProjectName.Axiom.Extension
-│   └── Pairing.lean          # ProjectName.Axiom.Pairing
+│   ├── Extension.lean        # Foundations.Axiom.Extension
+│   └── Pairing.lean          # Foundations.Axiom.Pairing
 ├── Nat/
-│   ├── Basic.lean            # ProjectName.Nat.Basic
-│   ├── Add.lean              # ProjectName.Nat.Add
-│   └── Mul.lean              # ProjectName.Nat.Mul
+│   ├── Basic.lean            # Foundations.Nat.Basic
+│   ├── Add.lean              # Foundations.Nat.Add
+│   └── Mul.lean              # Foundations.Nat.Mul
 └── BoolAlg/
-    ├── Basic.lean             # ProjectName.BoolAlg.Basic
-    └── Complete.lean          # ProjectName.BoolAlg.Complete
+    ├── Basic.lean             # Foundations.BoolAlg.Basic
+    └── Complete.lean          # Foundations.BoolAlg.Complete
 ```
 
 Rules:
 
 - Subdirectory names: `UpperCamelCase`, matching the sub-namespace.
 - Each subdirectory may have a `Basic.lean` for foundational definitions of that area.
-- `new-module.bash` supports paths: `bash new-module.bash Nat/Add` creates `ProjectName/Nat/Add.lean`.
+- `new-module.bash` supports paths: `bash new-module.bash Nat/Add` creates `Foundations/Nat/Add.lean`.
 - `gen-root.bash` automatically scans subdirectories.
-- Namespace mirrors path: `ProjectName/Nat/Add.lean` → `namespace ProjectName.Nat.Add`.
+- Namespace mirrors path: `Foundations/Nat/Add.lean` → `namespace Foundations.Nat.Add`.
 
 ### (23.) Barrel modules (mandatory for subdirectories)
 
@@ -485,23 +485,23 @@ The barrel file:
 - Serves as the **single import point** for the subdirectory.
 
 ```lean
--- ProjectName/Operations.lean (barrel file)
-import ProjectName.Operations.Union
-import ProjectName.Operations.Intersection
-import ProjectName.Operations.Setminus
+-- Foundations/Operations.lean (barrel file)
+import Foundations.Operations.Union
+import Foundations.Operations.Intersection
+import Foundations.Operations.Setminus
 -- ... all production modules in Operations/
 ```
 
-The root barrel file (`ProjectName.lean`) **prefers barrel imports** over individual
+The root barrel file (`Foundations.lean`) **prefers barrel imports** over individual
 sub-modules when a barrel exists:
 
 ```lean
--- ProjectName.lean (root barrel)
-import ProjectName.CList          -- barrel for CList/
-import ProjectName.Operations     -- barrel for Operations/
-import ProjectName.Axioms         -- barrel for Axioms/
-import ProjectName.HFSets         -- top-level module (no barrel needed)
-import ProjectName.Notation       -- top-level module
+-- Foundations.lean (root barrel)
+import Foundations.CList          -- barrel for CList/
+import Foundations.Operations     -- barrel for Operations/
+import Foundations.Axioms         -- barrel for Axioms/
+import Foundations.HFSets         -- top-level module (no barrel needed)
+import Foundations.Notation       -- top-level module
 ```
 
 `gen-root.bash` detects barrel files and emits the barrel import instead of listing
@@ -542,7 +542,7 @@ export MyNamespace (myDef myTheorem)
 5. If a module contributes to multiple namespaces, use one `export` per namespace.
 6. `notation`, `macro`, `syntax` are NOT listed in `export` — they propagate automatically on `import`.
 
-**Effect:** After `import ProjectName.Axioms.Union`, downstream code can write
+**Effect:** After `import Foundations.Axioms.Union`, downstream code can write
 `mem_union` directly instead of `MyNamespace.mem_union`.
 
 ### (31.) Export block maintenance
@@ -561,11 +561,11 @@ handle their own exports. The barrel file's sole job is aggregation via `import`
 However, a barrel file **may** include a top-level comment cataloguing the public API:
 
 ```lean
--- ProjectName/Operations.lean
+-- Foundations/Operations.lean
 -- Public API: union, inter, setminus, pair, powerset, symDiff, orderedPair,
 --             sep, sUnion, dom, range, comp, image, ...
-import ProjectName.Operations.Union
-import ProjectName.Operations.Intersection
+import Foundations.Operations.Union
+import Foundations.Operations.Intersection
 -- ...
 ```
 

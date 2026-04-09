@@ -1,7 +1,7 @@
 # Development Workflow
 
-**Author**: Your Name
-*Last updated: 2025-01-01*
+**Author**: Julián Calderón Almendros
+*Last updated: 2026-04-09*
 
 Complete guide for using this template — from initial setup to active development.
 
@@ -12,20 +12,20 @@ Complete guide for using this template — from initial setup to active developm
 ### Step 1 — Clone the template
 
 ```bash
-git clone https://github.com/your-username/lean4-project-template MyProject
-cd MyProject
+git clone https://github.com/julian1c2a/lean4-project-template Foundations
+cd Foundations
 ```
 
 ### Step 2 — Run setup
 
 ```bash
-bash setup.bash MyProject "Your Full Name" your-github-username
+bash setup.bash Foundations "Julián Calderón Almendros" julian1c2a
 ```
 
 This single command:
 
-- Renames `ProjectName/` → `MyProject/` and `ProjectName.lean` → `MyProject.lean`
-- Replaces all occurrences of `ProjectName`, `Your Name`, `your-username` in every file
+- Renames `Foundations/` → `Foundations/` and `Foundations.lean` → `Foundations.lean`
+- Replaces all occurrences of `Foundations`, `Julián Calderón Almendros`, `julian1c2a` in every file
 - Updates copyright year to the current year
 - Commits the result
 
@@ -59,11 +59,11 @@ This installs the pre-commit hook that:
 
 ```bash
 # Option A: with gh CLI
-gh repo create MyProject --public --source=. --push
+gh repo create Foundations --public --source=. --push
 
 # Option B: manually
 # Create repo on github.com, then:
-git remote add origin https://github.com/your-username/MyProject.git
+git remote add origin https://github.com/julian1c2a/Foundations.git
 git push -u origin master
 ```
 
@@ -92,7 +92,7 @@ Edit these files before starting development:
 bash git-lock.bash list
 
 # If more than one file is unlocked from a previous session, lock all:
-# bash git-lock.bash lock MyProject/SomeModule.lean
+# bash git-lock.bash lock Foundations/SomeModule.lean
 
 # 2. Check current sorry status
 make sorry
@@ -101,8 +101,8 @@ make sorry
 ### Creating a new module
 
 ```bash
-# Creates MyProject/ModuleName.lean from _template.lean
-# and adds the import to MyProject.lean
+# Creates Foundations/ModuleName.lean from _template.lean
+# and adds the import to Foundations.lean
 make new NAME=ModuleName
 
 # For nested modules:
@@ -112,19 +112,19 @@ make new NAME=Algebra/Ring
 Then edit the generated file. When done:
 
 ```bash
-bash git-lock.bash lock MyProject/ModuleName.lean
+bash git-lock.bash lock Foundations/ModuleName.lean
 ```
 
 ### Editing an existing module
 
 ```bash
 # 1. Unlock the file
-bash git-lock.bash unlock MyProject/ModuleName.lean
+bash git-lock.bash unlock Foundations/ModuleName.lean
 
 # 2. Edit...
 
 # 3. Lock when done
-bash git-lock.bash lock MyProject/ModuleName.lean
+bash git-lock.bash lock Foundations/ModuleName.lean
 ```
 
 ### The one-file rule
@@ -134,8 +134,8 @@ bash git-lock.bash lock MyProject/ModuleName.lean
 If you need to switch to a different file mid-session:
 
 ```bash
-bash git-lock.bash lock MyProject/CurrentModule.lean
-bash git-lock.bash unlock MyProject/NextModule.lean
+bash git-lock.bash lock Foundations/CurrentModule.lean
+bash git-lock.bash unlock Foundations/NextModule.lean
 ```
 
 ### Building
@@ -174,7 +174,7 @@ make sorry
 
 ```bash
 # Stage specific files (avoid git add -A to prevent accidents)
-git add MyProject/ModuleName.lean REFERENCE.md CHANGELOG.md
+git add Foundations/ModuleName.lean REFERENCE.md CHANGELOG.md
 
 git commit -m "feat: add ModuleName with N definitions and M theorems"
 ```
@@ -182,7 +182,7 @@ git commit -m "feat: add ModuleName with N definitions and M theorems"
 ### After committing — lock all modified .lean files
 
 ```bash
-bash git-lock.bash lock MyProject/ModuleName.lean
+bash git-lock.bash lock Foundations/ModuleName.lean
 
 # Commit the updated locked_files.txt
 git add locked_files.txt
@@ -219,7 +219,7 @@ If you add/remove modules manually without using `new-module.bash`:
 bash gen-root.bash
 ```
 
-This scans `MyProject/` for all `.lean` files (excluding `_template.lean`) and rewrites `MyProject.lean` with the full import list.
+This scans `Foundations/` for all `.lean` files (excluding `_template.lean`) and rewrites `Foundations.lean` with the full import list.
 
 ---
 

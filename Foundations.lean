@@ -1,6 +1,6 @@
 /-
-Copyright (c) 2025. All rights reserved.
-Author: Your Name
+Copyright (c) 2026. All rights reserved.
+Author: Julián Calderón Almendros
 License: MIT
 -/
 
@@ -8,6 +8,6 @@ License: MIT
 -- This file is managed by gen-root.bash — run it after adding new modules.
 -- Manual edits are safe but will be overwritten by gen-root.bash.
 
-import MyProject.Prelim
+import Foundations.Prelim
 
 -- Add new module imports here (or run: bash gen-root.bash)
