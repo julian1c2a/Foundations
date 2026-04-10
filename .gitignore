@@ -17,6 +17,9 @@ out/
 .vscode
 .vscode/
 .vscode/*
+*.json
+*.yaml
+*.yml
 
 # OS
 .DS_Store
