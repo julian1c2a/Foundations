@@ -99,6 +99,117 @@ Each entry records *what* was decided and *why*, for future reference.
 
 ---
 
+## ADR-008: Typeclasses atómicos + bundles en lugar de typeclass monolítico
+
+**Date**: 2026-04-10
+**Status**: Accepted
+
+**Context**: Phase 1 necesita una jerarquía de interfaces que permita reutilizar teoremas
+entre sistemas de fundamentación (ZFC, MK, Aczel, NF…). La primera propuesta era un
+único `class SetAxioms (U)` con todos los campos axiomáticos. Pero los sistemas no
+comparten el mismo subconjunto de axiomas: NF no tiene Fundación, KP tiene restricciones
+de complejidad, Aczel obtiene los axiomas como teoremas por construcción inductiva. Un
+typeclass monolítico obliga a todo sistema a implementar axiomas que no tiene.
+
+Además, los teoremas no necesitan todos los axiomas disponibles: `cantor_no_surjection`
+solo necesita Extensionalidad + Potencia + Separación; `empty_unique` solo necesita
+Extensionalidad + Vacío. Un typeclass monolítico impone una dependencia innecesariamente
+fuerte.
+
+**Decision**: Arquitectura en tres niveles:
+
+1. **Typeclasses atómicos** — uno por axioma del inventario universal (S01–S12, A01–A05).
+   Cada uno declara exactamente una operación o propiedad. Sin pruebas aquí.
+   Ejemplo: `class HasExt (U) [Membership U U] where ext : ∀ x y : U, ...`
+
+2. **Bundles** — typeclasses que extienden varios atómicos sin añadir nuevos campos.
+   Corresponden a fragmentos axiomáticos nombrados de la literatura.
+   Ejemplo: `class ZFSet (U) extends ZermeloSet U, HasRepl U`
+   La jerarquía de bundles refleja la jerarquía de sistemas: ZFBasic < ZFFinite < Zermelo < ZF < ZFC < MK.
+
+3. **Teoremas con requisitos mínimos** — cada teorema declara solo los typeclasses atómicos
+   que necesita, no el bundle completo.
+   Ejemplo: `theorem cantor_no_surjection [HasExt U] [HasPow U] [HasSep U] ...`
+
+**Rationale**:
+
+- *Frente a typeclass monolítico*: no hay campo "dummy" para axiomas que no aplican (NF, KP).
+  Los teoremas son reutilizables en el sistema más débil posible.
+- *Frente a `structure` en lugar de `class`*: perderíamos la inferencia de instancias.
+  Los teoremas necesitarían recibir explícitamente el sistema — verboso e incompatible con
+  el objetivo de reutilización automática.
+- *Frente a herencia lineal fija (ZF < ZFC < MK)*: NF y KP no encajan en esa cadena.
+  Los atómicos permiten composición arbitraria. Un sistema "raro" como NF instancia solo
+  `HasExt` + `HasStratSep`, sin necesidad de encajar en la jerarquía ZFC.
+- *Consistencia con Lean 4*: la inferencia de instancias de Lean resuelve automáticamente
+  qué bundle disponible satisface los requisitos del teorema. Esto es exactamente teoría de
+  modelos formalizada en el sistema de tipos.
+
+**Consequences**:
+
+- Más archivos en Phase 1 (uno por atómico) pero cada uno es trivial.
+- Los bundles permiten usar nombres familiares (`ZFSet`, `PeanoArith`) en el código de aplicación.
+- La distinción `axiom` vs `theorem` para el mismo campo (ZFC vs Aczel) es invisible al usuario
+  del typeclass, pero preservable mediante anotaciones `@proof_status` en REFERENCE.md.
+- Complejidad de diseño concentrada en Phase 1; fases posteriores se benefician directamente.
+- Dependencia cíclica imposible: atómicos < bundles < universales < instancias.
+
+---
+
+## ADR-009: Migración directa vs. dependencia de lago (lake dependency)
+
+**Date**: 2026-04-10
+**Status**: Accepted
+
+**Context**: Los repositorios `Peano`, `AczelSetTheory`, `ZFCSetTheory` y `MKplusCAC`
+contienen trabajo ya hecho que debe integrarse en `Foundations`. Hay dos estrategias:
+
+- **Dependencia de lago**: declarar los repos como dependencias en `lakefile.lean` e importar
+  sus módulos directamente. Es el camino rápido.
+- **Migración directa**: copiar el código fuente, adaptarlo a las convenciones de
+  `Foundations` (NC-1–NC-10, §6), e integrarlo como módulos propios.
+
+**Decision**: **Migración directa**, precedida en cada caso por una auditoría en el repositorio
+de origen. El proceso para cada repo es:
+
+1. Auditoría de nombres en el repo de origen (prefijos `ZF_*`, `PA_*`, `AZ_*`, convenios NC).
+2. Añadir export blocks a todos los módulos del repo de origen.
+3. Actualizar REFERENCE.md del repo de origen.
+4. Verificar compilación con `autoImplicit=false`.
+5. Copiar a `Foundations/` bajo la estructura de directorios definida en NEXT-STEPS.md.
+6. Instanciar los typeclasses atómicos/bundles de Phase 1 para cada tipo migrado.
+
+**Rationale**:
+
+- *Convenciones de nombres*: los repos de origen no siguen todavía NC-1–NC-10 de forma
+  consistente. Importarlos como dependencia introduciría nombres inconsistentes en
+  `Foundations` sin posibilidad de renombrar en origen.
+- *Control total sobre la API pública*: `Foundations` es la capa de reutilización.
+  Necesita decidir qué se exporta y con qué nombre, independientemente de cómo esté
+  organizado en el repo de origen.
+- *Instanciación de typeclasses*: para que `ZFCSetTheory` provea una instancia
+  `instance : ZFCSet ZFCUniverse`, alguien tiene que escribir ese glue code.
+  Es más limpio hacerlo en `Foundations` con el código ya migrado que añadir
+  código de glue en el repo de origen.
+- *Dependencias de lago crean acoplamiento de versiones*: si `ZFCSetTheory` cambia su API,
+  `Foundations` se rompe sin aviso. Con migración directa, el código en `Foundations` es
+  estable una vez migrado y bloqueado (`git-lock.bash freeze`).
+- *Excepción*: si en el futuro algún repo alcanza madurez suficiente y adopta todas las
+  convenciones de `Foundations`, se puede reconsiderar una dependencia de lago para ese
+  repo concreto. Eso requeriría un nuevo ADR.
+
+**Consequences**:
+
+- Mayor esfuerzo inicial (auditoría + migración), pero trabajo único por repo.
+- Los repos de origen siguen siendo independientes y usables por sí mismos.
+- Los repos de origen deben estar en buen estado antes de cada fase de migración
+  (Phases 5 y 6 tienen listas de pre-migración explícitas).
+- El código en `Foundations` queda frozen tras migración; los cambios en origen no
+  se propagan automáticamente. Esto es deseable: `Foundations` es la capa estable.
+- `lakefile.lean` de `Foundations` permanece sin dependencias externas (coherente con ADR-001).
+
+---
+
 ## Template for new decisions
 
 ## ADR-NNN: [Title]

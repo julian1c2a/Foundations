@@ -1,6 +1,6 @@
 # Next Steps — Foundations
 
-**Last updated:** 2026-04-10 12:00
+**Last updated:** 2026-04-10 18:00
 **Author**: Julián Calderón Almendros
 
 > Este archivo registra las fases de desarrollo planificadas.
@@ -28,7 +28,7 @@ Phase 0 ──► Phase 1 ──► Phase 5 ──► Phase 6 ──► Phase 9
 
 ---
 
-## Phase 0: Arquitectura y Convenciones ✅ En curso
+## Phase 0: Arquitectura y Convenciones ✅ Completada
 
 **Objetivo**: Establecer la visión, arquitectura y convenciones de nombres antes de escribir código.
 
@@ -36,8 +36,8 @@ Phase 0 ──► Phase 1 ──► Phase 5 ──► Phase 6 ──► Phase 9
 
 - [x] `THOUGHTS.md` — visión del proyecto, arquitectura de capas, sistemas previstos
 - [x] `NAMING-CONVENTIONS.md §6` — convenciones multi-sistema y guía de migración
-- [ ] `DECISIONS.md` — ADR con la decisión de arquitectura (typeclasses vs. estructuras)
-- [ ] `DECISIONS.md` — ADR con la estrategia de importación (dependencia vs. migración directa)
+- [x] `DECISIONS.md` — ADR con la decisión de arquitectura (typeclasses vs. estructuras) → ADR-008
+- [x] `DECISIONS.md` — ADR con la estrategia de importación (dependencia vs. migración directa) → ADR-009
 
 **Dependencias**: Ninguna
 **Complejidad**: Simple
@@ -52,100 +52,81 @@ entre sistemas. Arquitectura: typeclasses **atómicos** (uno por axioma) +
 
 Ver THOUGHTS.md §"2026-04-10 — Inventario universal" para el análisis completo.
 
-### Phase 1a — Typeclasses atómicos del inventario S (conjuntos)
+### Phase 1a — Typeclasses atómicos del inventario S (conjuntos) ✅ Completa
 
 Cada archivo define UN typeclass y su notación/API inmediata. Sin probar teoremas aquí.
 
-- [ ] `Foundations/Sets/Atomic/Ext.lean`     — `class HasExt (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Empty.lean`   — `class HasEmpty (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Pair.lean`    — `class HasPair (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Sep.lean`     — `class HasSep (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Union.lean`   — `class HasUnion (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Pow.lean`     — `class HasPow (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Inf.lean`     — `class HasInf (U) [Membership U U, HasEmpty U, HasSucc U]`
-- [ ] `Foundations/Sets/Atomic/Found.lean`   — `class HasFound (U) [Membership U U, HasEmpty U]`
-- [ ] `Foundations/Sets/Atomic/Repl.lean`    — `class HasRepl (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/Choice.lean`  — `class HasChoice (U) [Membership U U]`
-- [ ] `Foundations/Sets/Atomic/StratSep.lean`— `class HasStratSep (U) [Membership U U]` (para NF)
-- [ ] `Foundations/Sets/Atomic/ClassSep.lean`— `class HasClassSep (U) [Membership U U]` (para MK/NBG)
-- [ ] `Foundations/Sets/Atomic/CAC.lean`     — `class HasCAC (U) [Membership U U]` (para MK)
+- [x] `Foundations/Sets/Atomic/Ext.lean`     — `class HasExt (U) [Membership U U] : Prop`
+- [x] `Foundations/Sets/Atomic/Empty.lean`   — `class HasEmpty (U) [Membership U U] extends EmptyCollection U`
+- [x] `Foundations/Sets/Atomic/Pair.lean`    — `class HasPair (U) [Membership U U]`
+- [x] `Foundations/Sets/Atomic/Sep.lean`     — `class HasSep (U) [Membership U U]`
+- [x] `Foundations/Sets/Atomic/Union.lean`   — `class HasUnion (U) [Membership U U]`
+- [x] `Foundations/Sets/Atomic/Pow.lean`     — `class HasPow (U) [Membership U U]`
+- [x] `Foundations/Sets/Atomic/Inf.lean`     — `class HasInf (U) [Membership U U, HasEmpty U]` (setSucc field interno; sin dep. aritmética — ver ADR-008)
+- [x] `Foundations/Sets/Atomic/Found.lean`   — `class HasFound (U) [Membership U U, HasEmpty U] : Prop`
+- [x] `Foundations/Sets/Atomic/Repl.lean`    — `class HasRepl (U) [Membership U U]` (usa f : U → U)
+- [x] `Foundations/Sets/Atomic/Choice.lean`  — `class HasChoice (U) [Membership U U]`
+- [x] `Foundations/Sets/Atomic/StratSep.lean`— `class HasStratSep (U) [Membership U U]` (para NF)
+- [x] `Foundations/Sets/Atomic/ClassSep.lean`— `class HasClassSep (U) [Membership U U]` (para MK/NBG)
+- [x] `Foundations/Sets/Atomic/CAC.lean`     — `class HasCAC (U) [Membership U U]` (para MK)
 
-**Barrel**: `Foundations/Sets/Atomic.lean`
+**Barrel**: `Foundations/Sets/Atomic.lean` ✅ — build passing (16/16 jobs)
 
-### Phase 1b — Typeclasses atómicos del inventario A (aritmética)
+### Phase 1b — Typeclasses atómicos del inventario A (aritmética) ✅ Completa
 
-- [ ] `Foundations/Numeric/Atomic/Zero.lean`   — `class HasZero (N)`
-- [ ] `Foundations/Numeric/Atomic/Succ.lean`   — `class HasSucc (N) [HasZero N]`; inyectividad, σ n ≠ 0
-- [ ] `Foundations/Numeric/Atomic/Add.lean`    — `class HasAdd (N) [HasZero N, HasSucc N]`
-- [ ] `Foundations/Numeric/Atomic/Mul.lean`    — `class HasMul (N) [HasZero N, HasSucc N, HasAdd N]`
-- [ ] `Foundations/Numeric/Atomic/Ind.lean`    — `class HasInd (N) [HasZero N, HasSucc N]`
+- [x] `Foundations/Numeric/Atomic/Zero.lean`   — `class HasZero (N) extends Zero N`
+- [x] `Foundations/Numeric/Atomic/Succ.lean`   — `class HasSucc (N) [HasZero N]` + succ_ne_zero + succ_inj
+- [x] `Foundations/Numeric/Atomic/Add.lean`    — `class HasAdd (N) [HasZero N] [hs : HasSucc N]` + zero_add + succ_add + instAddOfHasAdd
+- [x] `Foundations/Numeric/Atomic/Mul.lean`    — `class HasMul (N) [HasZero N] [hs : HasSucc N] [ha : HasAdd N]` + zero_mul + succ_mul + instMulOfHasMul
+- [x] `Foundations/Numeric/Atomic/Ind.lean`    — `class HasInd (N) [HasZero N] [hs : HasSucc N] : Prop`
 
-**Barrel**: `Foundations/Numeric/Atomic.lean`
+**Barrel**: `Foundations/Numeric/Atomic.lean` ✅ — build passing (8/8 jobs)
 
-### Phase 1c — Bundles = fragmentos axiomáticos nombrados
+### Phase 1c — Bundles = fragmentos axiomáticos nombrados ✅ Completa
 
 Cada bundle extiende atómicos sin añadir nuevos campos. Nombrados según la literatura.
 
 **Set-theoretic bundles:**
 
-- [ ] `Foundations/Sets/Bundles/ZFBasic.lean`
-  — `class ZFBasic (U) extends HasExt U, HasEmpty U, HasPair U, HasSep U`
-  — primer fragmento de ZFC: del vacío a la separación (orden del proyecto ZFCSetTheory)
+- [x] `Foundations/Sets/Bundles/ZFBasic.lean`   — `class ZFBasic (U) extends HasExt U, HasEmpty U, HasPair U, HasSep U`
+- [x] `Foundations/Sets/Bundles/ZFFinite.lean`  — `class ZFFinite (U) extends ZFBasic U, HasUnion U, HasPow U, HasFound U`
+- [x] `Foundations/Sets/Bundles/Zermelo.lean`   — `class ZermeloSet (U) extends ZFFinite U, HasInf U`
+- [x] `Foundations/Sets/Bundles/ZF.lean`        — `class ZFSet (U) extends ZermeloSet U, HasRepl U`
+- [x] `Foundations/Sets/Bundles/ZFC.lean`       — `class ZFCSet (U) extends ZFSet U, HasChoice U`
+- [x] `Foundations/Sets/Bundles/MK.lean`        — `class MKSet (U) extends ZFCSet U, HasClassSep U, HasCAC U`
+- [x] `Foundations/Sets/Bundles/NF.lean`        — `class NFSet (U) extends HasExt U, HasStratSep U` (sin Fundación — incompatible con ZFC)
+- [x] `Foundations/Sets/Bundles/KP.lean`        — `class KPSet (U) extends HasExt U, HasEmpty U, HasPair U, HasUnion U` (versión simplificada)
 
-- [ ] `Foundations/Sets/Bundles/ZFFinite.lean`
-  — `class ZFFinite (U) extends ZFBasic U, HasUnion U, HasPow U, HasFound U`
-  — ZFC hereditariamente finito (modelo: HFSet de Aczel)
-
-- [ ] `Foundations/Sets/Bundles/Zermelo.lean`
-  — `class ZermeloSet (U) extends ZFFinite U, HasInf U`
-  — Z clásico (sin Replacement)
-
-- [ ] `Foundations/Sets/Bundles/ZF.lean`
-  — `class ZFSet (U) extends ZermeloSet U, HasRepl U`
-
-- [ ] `Foundations/Sets/Bundles/ZFC.lean`
-  — `class ZFCSet (U) extends ZFSet U, HasChoice U`
-
-- [ ] `Foundations/Sets/Bundles/MK.lean`
-  — `class MKSet (U) extends ZFCSet U, HasClassSep U, HasCAC U`
-
-- [ ] `Foundations/Sets/Bundles/NF.lean`
-  — `class NFSet (U) extends HasExt U, HasStratSep U`
-  — NF: extensionalidad + comprensión estratificada, SIN fundación
-
-- [ ] `Foundations/Sets/Bundles/KP.lean`
-  — `class KPSet (U) extends HasExt U, HasEmpty U, HasPair U, HasUnion U`
-  — Kripke-Platek (versión simplificada; la real añade restricciones de complejidad)
-
-**Barrel**: `Foundations/Sets/Bundles.lean`
+**Barrel**: `Foundations/Sets/Bundles.lean` ✅
 
 **Arithmetic bundles:**
 
-- [ ] `Foundations/Numeric/Bundles/Robinson.lean`
-  — `class RobinsonArith (N) extends HasZero N, HasSucc N, HasAdd N, HasMul N`
-  — aritmética Q de Robinson (sin inducción; base para incompletitud)
+- [x] `Foundations/Numeric/Bundles/Robinson.lean` — `class RobinsonArith (N) extends HasZero N, HasSucc N, HasAdd N, HasMul N`
+- [x] `Foundations/Numeric/Bundles/Peano.lean`    — `class PeanoArith (N) extends RobinsonArith N, HasInd N`
 
-- [ ] `Foundations/Numeric/Bundles/Peano.lean`
-  — `class PeanoArith (N) extends RobinsonArith N, HasInd N`
+**Barrel**: `Foundations/Numeric/Bundles.lean` ✅ — build passing (34/34 jobs)
 
-**Barrel**: `Foundations/Numeric/Bundles.lean`
-
-### Phase 1d — Primeros teoremas universales (con requisitos mínimos)
+### Phase 1d — Primeros teoremas universales (con requisitos mínimos) ✅ Completa
 
 Cada teorema lleva exactamente los typeclasses atómicos que necesita:
 
-- [ ] `Foundations/Sets/Universal/Basic.lean`
+- [x] `Foundations/Sets/Universal/Basic.lean`
   — `inter`, `sdiff` como definiciones derivadas de `HasSep`
   — `empty_unique [HasExt, HasEmpty]`, `pair_comm [HasExt, HasPair]`
   — `sep_empty [HasEmpty, HasSep]`, `mem_inter_iff [HasSep]`
 
-- [ ] `Foundations/Sets/Universal/Subset.lean`
+- [x] `Foundations/Sets/Universal/Subset.lean`
   — `def subset [HasSep]`; `subset_refl`, `subset_trans`, `subset_antisymm [HasExt]`
 
-- [ ] `Foundations/Sets/Universal/Cantor.lean`
+- [x] `Foundations/Sets/Universal/Cantor.lean`
   — `cantor_no_surjection [HasExt, HasPow, HasSep]`
 
-**Barrel**: `Foundations/Sets/Universal.lean`
+- [x] `Foundations/Sets/Universal/CBS.lean` (⚠ `cantor_bernstein` usa sorry — pendiente Phase 1d+)
+  — Cantor-Bernstein-Schröder: si existen inyecciones f : A → B y g : B → A, existe biyección A ≅ B
+  — `cantor_bernstein [HasExt, HasPow, HasSep, HasUnion]` — no requiere Choice
+  — Estrategia: punto fijo de Knaster-Tarski sobre 𝒫(A); ver sketch en CBS.lean
+
+**Barrel**: `Foundations/Sets/Universal.lean` ✅ — build passing (21/21 jobs)
 
 ### Phase 1e — Instancias vacías para verificar la jerarquía
 
@@ -460,8 +441,12 @@ Las instancias de ZFC, Aczel y MK los heredan automáticamente sin re-demostraci
 
 | Phase | Descripción | Dependencias | Estado |
 |-------|-------------|--------------|--------|
-| 0 | Arquitectura y convenciones | — | 🔄 En curso |
-| 1 | Interfaces (typeclasses) | 0 | ❌ Pendiente |
+| 0 | Arquitectura y convenciones | — | ✅ Completa |
+| 1a | Typeclasses atómicos S (conjuntos) | 0 | ✅ Completa |
+| 1b | Typeclasses atómicos A (aritmética) | 0 | ✅ Completa |
+| 1c | Bundles (fragmentos nombrados) | 1a+1b | ✅ Completa |
+| 1d | Teoremas universales (Basic/Subset/Cantor/CBS) | 0 | ✅ Completa (CBS sorry) |
+| 1e | Instancias check (CheckAczel, CheckZFC) | 1a–1d | ❌ Pendiente |
 | 2 | FOL Sintaxis + Deductivo | 0 | ❌ Pendiente |
 | 3 | FOL Semántica + Completitud | 2 | ❌ Pendiente |
 | 4 | Gödel + Incompletitud | 2+3+5 | ❌ Pendiente |

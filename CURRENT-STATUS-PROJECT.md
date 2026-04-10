@@ -1,6 +1,6 @@
 # Current Project Status — Foundations
 
-**Last updated:** 2026-04-09 00:00
+**Last updated:** 2026-04-10 13:00
 **Author**: Julián Calderón Almendros
 
 ---
@@ -58,6 +58,7 @@ Foundations/
 
 | Phase | Description | Status |
 |-------|-------------|--------|
+| Phase 0: Architecture | Conventions, ADRs, vision | ✅ Complete |
 | Phase 1: Foundations | `Prelim.lean` + core definitions | 🔄 In progress |
 | Phase 2: First modules | Core theorems and constructions | ❌ Pending |
 | Phase 3: Naming migration | Adopt Mathlib naming conventions | ❌ Pending |
