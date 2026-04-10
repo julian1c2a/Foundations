@@ -7,6 +7,17 @@
 build/
 out/
 
+# Infrastructure
+.claude
+.claude/
+.claude/*
+.github
+.github/
+.github/*
+.vscode
+.vscode/
+.vscode/*
+
 # OS
 .DS_Store
 Thumbs.db
