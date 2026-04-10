@@ -37,3 +37,4 @@ Thumbs.db
 
 # Lock file temp
 locked_files.txt.tmp
+.claude/settings.local.json
